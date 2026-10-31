@@ -326,6 +326,8 @@ canvas{width:100%; display:block;}
 
 table{font-family:var(--font-mono);}
 </style>
+<script defer src="analytics-config.js"></script>
+<script defer src="analytics.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -1430,11 +1432,12 @@ function lessonStepHeader(step, title){
  const labels=['Situation','Decision','Learn','Practice'];
  return `<div style="display:flex;gap:5px;margin:12px 0 16px;">${labels.map((label,i)=>`<div style="flex:1;"><div style="height:4px;border-radius:4px;background:${i<=step?'var(--cyan)':'var(--border)'};margin-bottom:5px;"></div><div style="font-size:9px;color:${i===step?'var(--text)':'var(--text-faint)'};">${label}</div></div>`).join('')}</div>`;
 }
-function openLesson(id){ renderLessonStep(id,0); }
+function openLesson(id){ trackAnalytics('lesson_started', {lesson_id:id}); renderLessonStep(id,0); }
 function renderLessonStep(id, step, selectedIndex=null){
  const l=LESSONS.find(x=>x.id===id);
  const scenario=LESSON_SCENARIOS[id];
  if(!l || !scenario) return;
+ trackAnalytics('lesson_step_viewed', {lesson_id:id, step});
  const done=state.lessonsCompleted.includes(id);
  let content='';
  if(step===0){
@@ -1454,6 +1457,7 @@ function renderLessonStep(id, step, selectedIndex=null){
 function chooseLessonScenario(id, index){ renderLessonStep(id,2,index); }
 function answerQuiz(lessonId, idx){
  const l = LESSONS.find(x=>x.id===lessonId);
+ trackAnalytics('quiz_answered', {lesson_id:lessonId, correct:idx===l.quiz.correct});
  const opts = document.querySelectorAll('#quiz-area .quiz-opt');
  opts.forEach((el,i)=>{
   el.style.pointerEvents='none';
@@ -1471,6 +1475,7 @@ function answerQuiz(lessonId, idx){
     </div>` : '';
    if(!state.lessonsCompleted.includes(lessonId)){
     state.lessonsCompleted.push(lessonId); state.xp+=25;
+    trackAnalytics('lesson_completed', {lesson_id:lessonId});
     area.insertAdjacentHTML('beforeend', `<p class="pos" style="font-size:12px; margin-top:10px;">Correct! ${l.quiz.explain}</p>${tryItRow}<button class="btn block" style="margin-top:10px;" onclick="closeModal()">Continue</button>`);
     checkFreePlay(); checkAchievements(); saveState(); renderAll();
    } else {
@@ -1579,6 +1584,7 @@ function buildTabBar(){
  el.innerHTML = TABS.map(t=>`<button class="tabbtn${t.id==='home'?' active':''}" data-tab="${t.id}" onclick="switchTab('${t.id}')"><span class="ic">${t.ic}</span>${t.label}</button>`).join('');
 }
 function switchTab(id){
+ if(currentTab!==id) trackAnalytics('section_viewed', {section:id});
  currentTab=id;
  document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
  document.getElementById('tab-'+id).classList.add('active');
@@ -2628,7 +2634,11 @@ function renderLandingTicker(){
 }
 
 /* ---------------- BOOTSTRAP ---------------- */
+function trackAnalytics(event, properties){
+ try { window.basepayTrack?.(event, properties); } catch (_) {}
+}
 function startGame(mode){
+ trackAnalytics('simulator_started');
  state = defaultState(mode);
  saveState();
  document.getElementById('landing').classList.add('hide');
@@ -2669,6 +2679,7 @@ function showInterfaceTour(step){
 }
 function endInterfaceTour(){ state.tourSeen=true; saveState(); closeModal(); }
 function resumeGame(saved){
+ trackAnalytics('simulator_resumed');
  state = saved;
  document.getElementById('landing').classList.add('hide');
  document.getElementById('app').classList.remove('hide');
@@ -2690,3 +2701,4 @@ window.addEventListener('DOMContentLoaded', ()=>{
 </script>
 </body>
 </html>
+
