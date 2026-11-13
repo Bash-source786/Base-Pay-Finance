@@ -1,0 +1,1 @@
+// Replaced at build time; only public Supabase project configuration is allowed.\nwindow.BASEPAY_AUTH_CONFIG = null;\n
