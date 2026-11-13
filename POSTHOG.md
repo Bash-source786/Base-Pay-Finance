@@ -1,28 +1,27 @@
-# BasePay analytics
+# BasePay analytics (PostHog)
 
-## Cloudflare Pages deployment
-Set build command to `node scripts/build.mjs` and output directory to `dist`.
-Set `POSTHOG_PROJECT_TOKEN` to the public project token and `POSTHOG_HOST` to the ingestion host from PostHog project settings, then redeploy. Use Node 20.12 or later. No npm dependencies are required.
+The project already includes a consent-controlled PostHog browser integration. You do not need to paste `npx -y @posthog/wizard@latest` into the website: it is a CLI wizard, not browser code.
 
-For local builds, copy `.env.example` to `.env`, fill the values, run `node --env-file=.env scripts/build.mjs` and serve `dist` over HTTP. Never commit `.env` or use a personal API key. The public project token is expected to appear in the browser build.
+## Cloudflare Pages
 
-Direct source deployments (including GitHub Pages branch deployments) continue working with analytics disabled. Deploy generated `dist` to activate analytics.
+Build command: `node scripts/build.mjs`; output directory: `dist`. Node 20.12+ recommended. No npm installation needed.
 
-## Events and privacy
-The SDK only loads after Allow analytics. Analytics preferences lets visitors withdraw consent. Events before consent are discarded. Autocapture, session replay and surveys are disabled. No financial values, saved-game contents, names or free-text answers are sent as custom properties. There is no login system, so no identify call is added.
+Configure `POSTHOG_PROJECT_TOKEN` (the public `phc_` token) and `POSTHOG_HOST` (`https://eu.i.posthog.com` or `https://us.i.posthog.com`). Set both variables or leave both unset to disable PostHog. Redeploy after changing environment variables. Never enter your PostHog personal API key.
 
-| Event | Properties | Trigger |
-| --- | --- | --- |
-| `$pageview` | Standard SDK page properties | Page load after consent |
-| `simulator_started` | None | New simulation |
-| `simulator_resumed` | None | Saved simulation resumed |
-| `section_viewed` | section | Different app section opened |
-| `lesson_started` | lesson_id | Lesson opened |
-| `lesson_step_viewed` | lesson_id, step | Lesson step displayed |
-| `quiz_answered` | lesson_id, correct | Quiz answer submitted |
-| `lesson_completed` | lesson_id | First successful completion |
+You can also configure `SUPABASE_URL` and `SUPABASE_ANON_KEY` for sign-in (see AUTH.md); PostHog and authentication can be enabled independently.
 
-## Live verification
-Decline in a fresh browser session and confirm there are no PostHog network requests. Accept through Analytics preferences, start a simulation and complete a lesson; confirm events in PostHog Activity. Withdraw consent and verify no further events. Test blocked SDK loading to ensure learning continues. Live ingestion requires deployment and a real consented visit.
+For local builds, copy `.env.example` to `.env`, fill any desired public configuration, and run `node --env-file=.env scripts/build.mjs`. Serve `dist` via HTTP. Never commit `.env`.
+
+Source-only GitHub Pages deployments have analytics disabled; generated builds are required for configuration.
+
+## Privacy and events
+
+The analytics SDK only loads after Allow analytics. Visitors can withdraw through Analytics preferences. Prior to consent, events are not sent. Autocapture, session replay and surveys are disabled. No financial values, saved-game content, names, email addresses or free-text answers are sent as custom event properties. Authenticated users are not automatically identified in PostHog.
+
+Custom events: simulator_started, simulator_resumed, section_viewed, lesson_started, lesson_step_viewed, quiz_answered, lesson_completed.
+
+## Verification
+
+Decline consent and confirm there are no PostHog calls. Accept consent, use the simulator, and inspect events in PostHog Activity. Withdraw consent and confirm no further events. Live ingestion requires a deployed site and a real consented visit.
 
 References: https://posthog.com/docs/libraries/js and https://posthog.com/docs/privacy/data-collection
