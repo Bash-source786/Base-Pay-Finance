@@ -4,6 +4,18 @@
 (() => {
   'use strict';
   let client = null, user = null;
+  function locked() { return document.body.classList.contains('bp-auth-locked'); }
+  function requireLogin(note) {
+    document.body.classList.add('bp-auth-locked');
+    panel();
+    $('bp-auth-root').classList.remove('hide');
+    setMode('signin');
+    if (note) message(note, 'error');
+  }
+  function allowAccess() {
+    document.body.classList.remove('bp-auth-locked');
+    close();
+  }
   const $ = id => document.getElementById(id);
   function configured() {
     return !!(window.BASEPAY_SUPABASE_URL && window.BASEPAY_SUPABASE_PUBLISHABLE_KEY);
@@ -54,7 +66,7 @@
       </section>`;
     document.body.appendChild(root);
     $('bp-auth-close').addEventListener('click', close);
-    root.addEventListener('click', e => { if (e.target === root) close(); });
+    root.addEventListener('click', e => { if (e.target === root && !locked()) close(); });
     $('bp-auth-form').addEventListener('submit', submit);
     $('bp-auth-switch').addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
     $('bp-auth-reset').addEventListener('click', () => setMode('reset'));
@@ -83,12 +95,12 @@
     if (signedIn) $('bp-auth-user').textContent = user.email || 'BasePay user';
     message('');
   }
-  function close() { const root = $('bp-auth-root'); if (root) root.classList.add('hide'); }
+  function close() { if (locked()) return; const root = $('bp-auth-root'); if (root) root.classList.add('hide'); }
   window.openBasePayAuth = () => {
     panel();
     $('bp-auth-root').classList.remove('hide');
     setMode('signin');
-    if (!client) message('Sign-in setup is not active yet. A Supabase project URL and publishable key are required.', 'error');
+    if (!client) message('Sign-in service is temporarily unavailable. Please try refreshing this page.', 'error');
     else if (!user) $('bp-auth-email').focus();
   };
   async function submit(event) {
@@ -121,24 +133,39 @@
   }
   function init() {
     updateButtons();
-    if (!configured()) return;
-    if (!window.supabase || !window.supabase.createClient) { console.warn('BasePay: Supabase client failed to load'); return; }
+    if (!configured()) { requireLogin('Sign-in configuration is unavailable. Please contact BasePay support.'); return; }
+    if (!window.supabase || !window.supabase.createClient) { console.warn('BasePay: Supabase client failed to load'); requireLogin('Sign-in service could not load. Please refresh this page.'); return; }
     try {
       client = window.supabase.createClient(window.BASEPAY_SUPABASE_URL,window.BASEPAY_SUPABASE_PUBLISHABLE_KEY);
       client.auth.onAuthStateChange((event,session) => {
         user = session?.user || null;
         updateButtons();
         if (event === 'PASSWORD_RECOVERY') {
-          window.openBasePayAuth();
+          document.body.classList.add('bp-auth-locked');
+          panel();
+          $('bp-auth-root').classList.remove('hide');
           setMode('new-password');
-        } else if ($('bp-auth-root') && !$('bp-auth-root').classList.contains('hide') && mode !== 'new-password') setMode('signin');
+          return;
+        }
+        if (user) {
+          if (mode !== 'new-password') allowAccess();
+        } else {
+          requireLogin();
+        }
       });
+      // Verify the restored login session on every page load.
       client.auth.getUser().then(({data,error}) => {
-        if (!error) { user = data.user || null; updateButtons(); }
-      }).catch(console.warn);
-    } catch (e) { console.warn('BasePay: Could not initialize authentication',e); }
+        if (error || !data.user) {
+          user = null; updateButtons(); requireLogin();
+        } else {
+          user = data.user; updateButtons();
+          if (mode !== 'new-password') allowAccess();
+        }
+      }).catch(() => requireLogin('Unable to verify your session. Please sign in.'));
+
+    } catch (e) { console.warn('BasePay: Could not initialize authentication',e); requireLogin('Sign-in could not start. Please refresh this page.'); }
   }
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !locked()) close(); });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init);
   else init();
 })();
