@@ -460,6 +460,31 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 }
 :root ::selection{background:var(--selection-bg);color:var(--text)}
 
+
+/* Consistent dashboard and simulator charts: no hard-coded neon or navy gauges. */
+:root{
+ --gauge-track:var(--surface-3);--gauge-fill:var(--accent);--gauge-label:var(--accent);
+}
+:root[data-theme="pink"]{
+ --gauge-track:#edd5de;--gauge-fill:#a45d7a;--gauge-label:#98516e;
+}
+:root[data-theme="sage"]{
+ --gauge-track:#dce6d5;--gauge-fill:#65876b;--gauge-label:#506f55;
+}
+:root[data-theme="lavender"]{
+ --gauge-track:#39304f;--gauge-fill:#c4a7ef;--gauge-label:#d9c3fa;
+}
+:root[data-theme="light"]{
+ --gauge-track:#e5e8ef;--gauge-fill:#286e59;--gauge-label:#286e59;
+}
+.guide-card{border-left-color:var(--accent)}
+.guide-label{color:var(--accent)}
+.intro-card{border-left-color:var(--accent)}
+.intro-label{color:var(--accent)}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .gauge-wrap svg{
+ overflow:visible;
+}
+
 </style>
 <script defer src="analytics-config.js"></script>
 <script defer src="analytics.js"></script>
@@ -1707,10 +1732,10 @@ function svgGauge(value,max,color,size,sub){
  const frac=Math.max(0,Math.min(1,value/max)); const dash=c*frac;
  return `<div class="gauge-wrap"><div style="position:relative; width:${size}px; height:${size}px;">
   <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-   <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1a2440" stroke-width="${stroke}"/>
-   <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-dasharray="${dash} ${c}" stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"/>
+   <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--gauge-track)" stroke-width="${stroke}"/>
+   <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--gauge-fill)" stroke-width="${stroke}" stroke-dasharray="${dash} ${c}" stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"/>
   </svg>
-  <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; color:${color};">${Math.round(value)}</div>
+  <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; color:var(--gauge-label);">${Math.round(value)}</div>
  </div><div class="gauge-sub">${sub||''}</div></div>`;
 }
 
