@@ -9,11 +9,14 @@ For local builds, copy `.env.example` to `.env`, fill the values, run `node --en
 Direct source deployments (including GitHub Pages branch deployments) continue working with analytics disabled. Deploy generated `dist` to activate analytics.
 
 ## Events and privacy
-The SDK only loads after Allow analytics. Analytics preferences lets visitors withdraw consent. Events before consent are discarded. Autocapture, session replay and surveys are disabled. No financial values, saved-game contents, names or free-text answers are sent as custom properties. There is no login system, so no identify call is added.
+The SDK only loads after Allow analytics. Analytics preferences lets visitors withdraw consent. Events before consent are discarded. Autocapture, session replay and surveys are disabled. No financial values, saved-game contents, names or free-text answers are sent as custom properties. After sign-in or session restoration, the verified account UUID identifies consenting users across devices. Email, passwords and auth tokens are never sent. Logout and account switching reset the analytics identity. Consent is a per-browser choice.
 
 | Event | Properties | Trigger |
 | --- | --- | --- |
 | `$pageview` | Standard SDK page properties | Page load after consent |
+| `sign_in_succeeded` | None | Successful email/password sign-in |
+| `signup_submitted` | None | Signup request accepted (not proof of email verification) |
+| `sign_out_succeeded` | None | Authenticated account signed out |
 | `simulator_started` | None | New simulation |
 | `simulator_resumed` | None | Saved simulation resumed |
 | `section_viewed` | section | Different app section opened |
@@ -26,3 +29,4 @@ The SDK only loads after Allow analytics. Analytics preferences lets visitors wi
 Decline in a fresh browser session and confirm there are no PostHog network requests. Accept through Analytics preferences, start a simulation and complete a lesson; confirm events in PostHog Activity. Withdraw consent and verify no further events. Test blocked SDK loading to ensure learning continues. Live ingestion requires deployment and a real consented visit.
 
 References: https://posthog.com/docs/libraries/js and https://posthog.com/docs/privacy/data-collection
+

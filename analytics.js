@@ -3,8 +3,26 @@
   if (!config?.token || !config?.host) return;
   const key = 'basepay-analytics-consent';
   let consent = null, loading = false, ready = false, queue = [];
+  let userId = null, identifiedId = null;
+  function identify() {
+    if (!ready || consent !== 'yes' || !userId || identifiedId === userId) return;
+    window.posthog.identify(userId);
+    identifiedId = userId;
+  }
+  // Keep only the account UUID in memory; never send email or auth credentials.
+  window.basepayAnalyticsUser = id => {
+    const next = typeof id === 'string' && id ? id : null;
+    if (next === userId) return;
+    if (userId || !next) {
+      queue = [];
+      if (ready) { try { window.posthog.reset(); } catch (_) {} }
+      identifiedId = null;
+    }
+    userId = next;
+    try { identify(); } catch (_) {}
+  };
   try { consent = localStorage.getItem(key); } catch (_) {}
-  const allowed = new Set(['simulator_started','simulator_resumed','section_viewed','lesson_started','lesson_step_viewed','quiz_answered','lesson_completed']);
+  const allowed = new Set(['sign_in_succeeded','signup_submitted','sign_out_succeeded','simulator_started','simulator_resumed','section_viewed','lesson_started','lesson_step_viewed','quiz_answered','lesson_completed']);
   window.basepayTrack = (event, properties = {}) => {
     if (consent !== 'yes' || !allowed.has(event)) return;
     const safe = {};
@@ -31,7 +49,7 @@
           api_host: config.host, defaults: '2026-08-30',
           autocapture: false, capture_pageview: true, capture_pageleave: false,
           disable_session_recording: true, disable_surveys: true,
-          capture_exceptions: false, person_profiles: 'never',
+          capture_exceptions: false, person_profiles: 'identified_only',
           persistence: 'localStorage', ip: false,
           before_send: event => {
             if (consent !== 'yes') return null;
@@ -48,6 +66,10 @@
             ready = true;
             if (consent !== 'yes') { client.opt_out_capturing(); queue = []; return; }
             client.opt_in_capturing({captureEventName:false});
+            // Clear a persisted identity before restoring the verified account.
+            if (!userId || client.get_distinct_id() !== userId) client.reset();
+            identifiedId = null;
+            identify();
             queue.splice(0).forEach(([event,props]) => client.capture(event,props));
           }
         });
@@ -60,18 +82,19 @@
     try { localStorage.setItem(key,value); } catch (_) {}
     document.getElementById('analytics-choice').hidden = true;
     if (value === 'yes') {
-      if (ready) window.posthog.opt_in_capturing({captureEventName:false});
+      if (ready) { window.posthog.opt_in_capturing({captureEventName:false}); identify(); }
       else start();
     } else {
       queue = [];
-      if (ready) window.posthog.opt_out_capturing();
+      if (ready) { window.posthog.reset(); window.posthog.opt_out_capturing(); }
+      identifiedId = null;
     }
   }
   const panel = document.createElement('aside');
   panel.id = 'analytics-choice';
   panel.setAttribute('aria-label','Analytics preferences');
-  panel.style.cssText = 'position:fixed;bottom:82px;left:12px;right:12px;max-width:520px;margin:auto;z-index:150;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 4px 24px #0005';
-  panel.innerHTML = '<strong>Help improve BasePay?</strong><p style="margin:8px 0;font-size:12px">Allow PostHog analytics to measure visits and lesson progress. We do not send your financial inputs or record your screen. Change this choice anytime.</p><div class="btn-row"><button class="btn" id="analytics-decline">No thanks</button><button class="btn" id="analytics-accept">Allow analytics</button></div>';
+  panel.style.cssText = 'position:fixed;bottom:82px;left:12px;right:12px;max-width:520px;margin:auto;z-index:2100;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 4px 24px #0005';
+  panel.innerHTML = '<strong>Help improve BasePay?</strong><p style="margin:8px 0;font-size:12px">Allow PostHog analytics to measure visits, sign-ins and lesson progress, linked across devices using your account ID. We do not send your email, password or financial inputs, or record your screen. Change this choice anytime.</p><div class="btn-row"><button class="btn" id="analytics-decline">No thanks</button><button class="btn" id="analytics-accept">Allow analytics</button></div>';
   panel.hidden = consent !== null;
   document.body.appendChild(panel);
   document.getElementById('analytics-decline').onclick = () => choose('no');
@@ -79,8 +102,9 @@
   const settings = document.createElement('button');
   settings.className = 'btn sm';
   settings.textContent = 'Analytics preferences';
-  settings.style.cssText = 'position:fixed;bottom:70px;right:12px;z-index:40;font-size:10px';
+  settings.style.cssText = 'position:fixed;bottom:70px;right:12px;z-index:2101;font-size:10px';
   settings.onclick = () => { panel.hidden = false; };
   document.body.appendChild(settings);
   start();
 })();
+

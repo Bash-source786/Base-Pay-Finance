@@ -118,6 +118,12 @@
       else if (mode === 'reset') result = await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin + location.pathname});
       else result = await client.auth.signInWithPassword({email,password});
       if (result.error) throw result.error;
+      try {
+        if (mode === 'signin' && result.data?.user) {
+          window.basepayAnalyticsUser?.(result.data.user.id);
+          window.basepayTrack?.('sign_in_succeeded');
+        } else if (mode === 'signup') window.basepayTrack?.('signup_submitted');
+      } catch (_) {}
       if (mode === 'new-password') { mode = 'signin'; enterAccount(user); }
       else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent.');
       else if (mode === 'signup' && !result.data.session) message('Verification email sent. Please check your inbox and your junk or spam folder for the verification link, then sign in.');
@@ -135,6 +141,10 @@
     } catch (error) { message(error.message || 'Sign-out failed.','error'); }
   }
   function clearAccount(){
+    try {
+      if (activeUid) window.basepayTrack?.('sign_out_succeeded');
+      window.basepayAnalyticsUser?.(null);
+    } catch (_) {}
     generation++;
     activeUid = null; entering = null; user = null;
     window.BasePayCloud?.logout();
@@ -144,6 +154,7 @@
   }
   function enterAccount(current){
     if (!current) return;
+    try { window.basepayAnalyticsUser?.(current.id); } catch (_) {}
     if (activeUid === current.id) { allowAccess(); return; }
     if (entering) return;
     const expectedGeneration = generation, expectedId = current.id;
@@ -203,3 +214,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init);
   else init();
 })();
+
