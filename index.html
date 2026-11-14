@@ -327,6 +327,13 @@ canvas{width:100%; display:block;}
 table{font-family:var(--font-mono);}
 
 /* Supabase account overlay */
+.bp-social-actions{display:grid;gap:9px;margin:12px 0}
+.bp-social-divider{text-align:center;display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:12px}
+.bp-social-divider:before,.bp-social-divider:after{content:"";height:1px;background:var(--border);flex:1}
+.bp-social-button{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:9px;color:var(--text);background:var(--bg-elevated);font:inherit;font-weight:600;cursor:pointer}
+.bp-social-button:hover{border-color:var(--cyan)}
+.bp-social-button:disabled{opacity:.6;cursor:wait}
+
 .bp-auth-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:2000;display:flex;align-items:center;justify-content:center;padding:18px}
 .bp-auth-panel{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(100%,410px);max-height:94vh;overflow:auto;box-shadow:0 20px 50px #0006}
 .bp-auth-panel h2{margin:14px 0 6px;font-size:23px}
