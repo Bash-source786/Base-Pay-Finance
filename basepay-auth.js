@@ -44,8 +44,6 @@
         <div id="bp-social-actions" class="bp-social-actions">
           <div class="bp-social-divider"><span>or continue with</span></div>
           <button type="button" id="bp-google" class="bp-social-button">Continue with Google</button>
-          <button type="button" id="bp-github" class="bp-social-button">Continue with GitHub</button>
-          <button type="button" id="bp-apple" class="bp-social-button">Continue with Apple</button>
         </div>
         <p id="bp-auth-message" role="status" aria-live="polite"></p>
         <div class="bp-auth-actions" id="bp-auth-actions">
@@ -66,8 +64,6 @@
     $('bp-auth-reset').addEventListener('click', () => setMode('reset'));
     $('bp-auth-signout').addEventListener('click', signOut);
     $('bp-google').addEventListener('click', () => socialSignIn('google'));
-    $('bp-github').addEventListener('click', () => socialSignIn('github'));
-    $('bp-apple').addEventListener('click', () => socialSignIn('apple'));
     return root;
   }
   let mode = 'signin';
@@ -125,9 +121,9 @@
   }
   async function socialSignIn(provider) {
     if (!client) { message('Supabase connection has not been configured yet.', 'error'); return; }
-    const button = $(provider === 'google' ? 'bp-google' : provider === 'apple' ? 'bp-apple' : 'bp-github');
+    const button = $('bp-google');
     button.disabled = true;
-    message('Redirecting to ' + (provider === 'google' ? 'Google' : provider === 'apple' ? 'Apple' : 'GitHub') + '…');
+    message('Redirecting to ' + 'Google' + '…');
     try {
       const {error} = await client.auth.signInWithOAuth({
         provider,
