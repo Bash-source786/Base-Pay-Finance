@@ -42,6 +42,7 @@
         <span class="eyebrow">BasePay account</span>
         <h2 id="bp-auth-title">Sign in</h2>
         <p id="bp-auth-description" class="bp-auth-caption">Sign in with your email address.</p>
+        <p id="bp-signup-email-note" class="bp-auth-caption hide" role="note">We’ll send you an email to verify your account. Please check your inbox, including your junk or spam folder, for the verification link.</p>
         <form id="bp-auth-form">
           <label for="bp-auth-email">Email address</label>
           <input id="bp-auth-email" type="email" autocomplete="email" required placeholder="you@example.com">
@@ -77,6 +78,7 @@
     const signedIn = !!user && next !== 'new-password';
     $('bp-auth-title').textContent = signedIn ? 'Your account' : next === 'signup' ? 'Create an account' : next === 'reset' ? 'Reset your password' : next === 'new-password' ? 'Choose a new password' : 'Sign in';
     $('bp-auth-description').textContent = signedIn ? 'You are signed in to BasePay.' : next === 'reset' ? 'We will email you a password reset link.' : next === 'new-password' ? 'Enter your new password below.' : 'Use your email and password.';
+    $('bp-signup-email-note').classList.toggle('hide',signedIn || next !== 'signup');
     $('bp-auth-form').classList.toggle('hide',signedIn);
     $('bp-auth-actions').classList.toggle('hide',signedIn || next === 'new-password');
     $('bp-auth-signed-in').classList.toggle('hide',!signedIn);
@@ -118,7 +120,7 @@
       if (result.error) throw result.error;
       if (mode === 'new-password') { mode = 'signin'; enterAccount(user); }
       else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent.');
-      else if (mode === 'signup' && !result.data.session) message('Check your inbox for the confirmation link, then sign in.');
+      else if (mode === 'signup' && !result.data.session) message('Verification email sent. Please check your inbox and your junk or spam folder for the verification link, then sign in.');
       else { message('Signed in successfully.'); if (mode === 'signup') setMode('signin'); }
     } catch (error) { message(error.message || 'Authentication failed. Please try again.', 'error'); }
     finally { button.disabled = false; }
