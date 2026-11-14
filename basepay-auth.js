@@ -64,7 +64,7 @@
   let mode = 'signin';
   function setMode(next) {
     mode = next;
-    const signedIn = !!user;
+    const signedIn = !!user && next !== 'new-password';
     $('bp-auth-title').textContent = signedIn ? 'Your account' : next === 'signup' ? 'Create an account' : next === 'reset' ? 'Reset your password' : next === 'new-password' ? 'Choose a new password' : 'Sign in';
     $('bp-auth-description').textContent = signedIn ? 'You are signed in to BasePay.' : next === 'reset' ? 'We will email you a password reset link.' : next === 'new-password' ? 'Enter your new password below.' : 'Use your email and password.';
     $('bp-auth-form').classList.toggle('hide',signedIn);
