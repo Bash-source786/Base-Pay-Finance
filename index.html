@@ -353,6 +353,7 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 <script defer src="analytics.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script defer src="supabase-config.js"></script>
+<script defer src="basepay-cloud.js"></script>
 <script defer src="basepay-auth.js"></script>
 </head>
 <body class="bp-auth-locked">
@@ -398,7 +399,7 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
   <div class="topbar">
     <div class="brand"><span class="dot"></span> BasePay</div>
     <div class="stat-pills">
-      <button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()" style="font-size:11px;padding:5px 8px">Sign in</button><span class="pill day" id="pill-day">Day 1</span>
+      <span id="bp-save-status" style="font-size:10px;color:var(--text-dim)" aria-live="polite"></span><button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()" style="font-size:11px;padding:5px 8px">Sign in</button><span class="pill day" id="pill-day">Day 1</span>
       <span class="pill cash" id="pill-cash">£0</span>
       <span class="pill xp" id="pill-xp">0 XP</span>
       <button class="theme-toggle" id="theme-btn-app" onclick="showInterfaceTour(0)" title="How does this work?" style="position:static; width:26px; height:26px; font-size:12px;">❓</button>
@@ -935,12 +936,16 @@ function defaultState(mode){
 }
 
 function saveState(){
- try{ localStorage.setItem('capitolRiseSave', JSON.stringify(state)); }catch(e){ /* storage unavailable — degrade gracefully */ }
+ if(!state) return;
+ if(window.BasePayCloud) window.BasePayCloud.enqueue(state);
 }
-function loadState(){
+function loadLegacyState(){
  try{ const raw=localStorage.getItem('capitolRiseSave'); return raw?JSON.parse(raw):null; }catch(e){ return null; }
 }
-function wipeState(){ try{ localStorage.removeItem('capitolRiseSave'); }catch(e){} }
+function wipeState(){
+ // Legacy browser save only. Do not delete cloud account saves.
+ try{ localStorage.removeItem('capitolRiseSave'); }catch(e){}
+}
 
 /* ---------------- CALCULATIONS ---------------- */
 function computePAYE(annualGross, hasStudentLoan){
@@ -2713,16 +2718,46 @@ function resumeGame(saved){
  switchTab('home');
  renderAll();
 }
+/* Called only after the authenticated user's cloud save has loaded.
+   A previous anonymous browser save is never imported without consent. */
+function basepayLoadAccountSave(saved){
+ closeModal();
+ document.getElementById('app').classList.add('hide');
+ document.getElementById('landing').classList.remove('hide');
+ state = null;
+ if(saved && saved.day){
+   resumeGame(saved);
+   return;
+ }
+ const previous = loadLegacyState();
+ if(previous && previous.day && previous.mode){
+   openModal(`<button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>Import previous progress?</h3>
+      <p>You have an older simulator save on this browser. Would you like to attach it to this account?</p>
+      <p class="faint">Only choose Import if this save belongs to you.</p>
+      <div class="btn-row">
+        <button class="btn ghost" onclick="closeModal()">Start a new simulation</button>
+        <button class="btn primary" onclick="basepayImportOldSave()">Import my progress</button>
+      </div>`);
+ }
+}
+function basepayImportOldSave(){
+ const previous = loadLegacyState();
+ if(!previous || !previous.day || !previous.mode) return;
+ resumeGame(previous);
+ saveState();
+ closeModal();
+ toast('Your previous progress is being saved to this account.');
+}
+function basepayClearForSignOut(){
+ closeModal();
+ state = null;
+ document.getElementById('app').classList.add('hide');
+ document.getElementById('landing').classList.remove('hide');
+}
 window.addEventListener('DOMContentLoaded', ()=>{
  initTheme();
  renderLandingTicker();
- const saved = loadState();
- if(saved && saved.day){
-  openModal(`<button class="modal-close" onclick="closeModal()">✕</button>
-   <h3>Welcome back</h3>
-   <p class="faint">You have a saved game — Day ${saved.day}, ${fmt(saved.cash)} cash, ${saved.mode==='youth'?'Youth':'Adult'} Mode.</p>
-   <div class="btn-row"><button class="btn ghost" onclick="wipeState(); closeModal();">Start fresh</button><button class="btn primary" onclick="resumeGame(${JSON.stringify(saved).replace(/</g,'\\u003c')}); closeModal();">Resume</button></div>`);
- }
 });
 </script>
 </body>
