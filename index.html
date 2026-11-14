@@ -136,7 +136,7 @@ button{font-family:var(--font-ui);}
   position:sticky; top:0; z-index:20; background:var(--bg-elevated); backdrop-filter:blur(6px);
   border-bottom:1px solid var(--border-soft); padding:10px 16px; display:flex; align-items:center; justify-content:space-between;
 }
-.brand{display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600;}
+.brand{border:0;padding:0;background:none;color:inherit;cursor:pointer;display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600;}
 .brand .dot{width:7px; height:7px; border-radius:50%; background:var(--green);}
 .stat-pills{display:flex; gap:6px; align-items:center;}
 .pill{font-size:11px; padding:4px 8px; border-radius:7px; border:1px solid var(--border); background:var(--surface); white-space:nowrap; font-family:var(--font-mono);}
@@ -564,7 +564,7 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 <!-- ============ APP ============ -->
 <div id="app" class="hide">
   <div class="topbar">
-    <div class="brand"><img src="/assets/basepay-icon-bw.svg" alt="" width="27" height="27"> BasePay</div>
+    <button type="button" class="brand" aria-label="BasePay home" onclick="goToHome()"><img src="/assets/basepay-icon-bw.svg" alt="" width="27" height="27"> BasePay</button>
     <div class="stat-pills">
       <span id="bp-save-status" style="font-size:10px;color:var(--text-dim)" aria-live="polite"></span><button type="button" class="btn ghost" onclick="openAesthetics()" style="font-size:11px;padding:5px 8px">Aesthetics</button><button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()" style="font-size:11px;padding:5px 8px">Sign in</button><span class="pill day" id="pill-day">Day 1</span>
       <span class="pill cash" id="pill-cash">£0</span>
