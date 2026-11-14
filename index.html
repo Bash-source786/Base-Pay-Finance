@@ -348,6 +348,49 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 #bp-auth-signed-in p{overflow-wrap:anywhere}
 .bp-auth-panel .hide,.bp-auth-backdrop.hide{display:none!important}
 
+
+/* Additional palettes keep positive/negative financial colours meaningful. */
+:root[data-theme="pink"]{
+ --bg:#fff5f8; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#fce7ef; --surface-3:#f7d6e3;
+ --border:#e5bdcd; --border-soft:#f1dce5; --text:#392330; --text-dim:#755161; --text-faint:#896373;
+ --green:#23734e; --green-dim:#e3f3e9; --red:#b52e4b; --red-dim:#ffe5eb;
+ --amber:#865b12; --amber-dim:#fff0d3; --purple:#9a3569; --purple-dim:#fce7ef; --cyan:#256d83; --cyan-dim:#e5f3f7;
+ --accent:#a53265; --accent-ink:#ffffff; --shadow-card:0 2px 8px #6e254c08; color-scheme:light;
+}
+:root[data-theme="sage"]{
+ --bg:#f7f5ec; --bg-elevated:#fffef8; --surface:#fffef8; --surface-2:#eaf0e3; --surface-3:#dce6d3;
+ --border:#c4ceba; --border-soft:#e1e5d5; --text:#28362a; --text-dim:#53634e; --text-faint:#697661;
+ --green:#376c47; --green-dim:#e4efdf; --red:#ad3b39; --red-dim:#f9e6df;
+ --amber:#805e16; --amber-dim:#f6ebcf; --purple:#715785; --purple-dim:#eee7f2; --cyan:#326d70; --cyan-dim:#e1eeea;
+ --accent:#506e43; --accent-ink:#ffffff; --shadow-card:0 2px 8px #344a2408; color-scheme:light;
+}
+:root[data-theme="lavender"]{
+ --bg:#151222; --bg-elevated:#1c182c; --surface:#231e35; --surface-2:#2d2642; --surface-3:#39304f;
+ --border:#4e4265; --border-soft:#352d47; --text:#f2edf9; --text-dim:#c0b3d3; --text-faint:#a99abd;
+ --green:#81d5aa; --green-dim:#20392f; --red:#ff9cae; --red-dim:#452531;
+ --amber:#e9c078; --amber-dim:#3c3225; --purple:#c4a7ef; --purple-dim:#382b50; --cyan:#91cbdc; --cyan-dim:#233943;
+ --accent:#c4a7ef; --accent-ink:#21172f; --shadow-card:0 2px 10px #0002; color-scheme:dark;
+}
+:root{--accent:var(--green);--accent-ink:#062017;color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"]) .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.landing-hero .accent{color:var(--accent)}
+.brand .dot{background:var(--accent)}
+.tabbtn.active{border-top-color:var(--accent)}
+.landing-actions{display:flex;justify-content:flex-end;gap:8px;padding:16px 22px 0}
+.topbar,.stat-pills{flex-wrap:wrap;gap:8px}
+.stat-pills{justify-content:flex-end}
+.aesthetics-dialog{color:var(--text);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:24px;width:calc(100% - 32px);max-width:440px;max-height:85vh;overflow:auto;box-shadow:0 24px 80px #0005}
+.aesthetics-dialog::backdrop{background:#08061199}
+.theme-options{display:grid;gap:8px;margin-top:18px}
+.theme-option{display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:13px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);cursor:pointer}
+.theme-option[aria-pressed="true"]{border:2px solid var(--accent);padding:12px}
+.theme-swatches{display:flex;flex-shrink:0}
+.theme-swatches i{width:20px;height:28px;background:var(--swatch);border:1px solid #8885}
+.theme-swatches i:first-child{border-radius:6px 0 0 6px}.theme-swatches i:last-child{border-radius:0 6px 6px 0}
+.theme-option small{display:block;color:var(--text-dim);margin-top:2px}
+.theme-check{margin-left:auto;color:var(--accent);font-weight:700}
+
 </style>
 <script defer src="analytics-config.js"></script>
 <script defer src="analytics.js"></script>
@@ -361,8 +404,8 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 
 <!-- ============ LANDING ============ -->
 <div id="landing">
+  <div class="landing-actions"><button class="btn ghost" onclick="openAesthetics()">Aesthetics</button><button id="bp-account-landing" class="btn ghost" onclick="openBasePayAuth()">My account</button></div>
   <div class="landing-hero">
-    <button class="theme-toggle" id="theme-btn-landing" onclick="toggleTheme()" title="Toggle light/dark">🌙</button>
     <span class="eyebrow">BasePay</span>
     <h1>Learn how UK money <span class="accent">actually</span> works.<br>Practise it without real risk.</h1>
     <p class="lead">A hands-on guide to money. Make choices, see what happens, and build confidence — without risking real money.</p>
@@ -399,11 +442,10 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
   <div class="topbar">
     <div class="brand"><span class="dot"></span> BasePay</div>
     <div class="stat-pills">
-      <span id="bp-save-status" style="font-size:10px;color:var(--text-dim)" aria-live="polite"></span><button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()" style="font-size:11px;padding:5px 8px">Sign in</button><span class="pill day" id="pill-day">Day 1</span>
+      <span id="bp-save-status" style="font-size:10px;color:var(--text-dim)" aria-live="polite"></span><button type="button" class="btn ghost" onclick="openAesthetics()" style="font-size:11px;padding:5px 8px">Aesthetics</button><button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()" style="font-size:11px;padding:5px 8px">Sign in</button><span class="pill day" id="pill-day">Day 1</span>
       <span class="pill cash" id="pill-cash">£0</span>
       <span class="pill xp" id="pill-xp">0 XP</span>
       <button class="theme-toggle" id="theme-btn-app" onclick="showInterfaceTour(0)" title="How does this work?" style="position:static; width:26px; height:26px; font-size:12px;">❓</button>
-      <button class="theme-toggle" id="theme-btn-app-2" onclick="toggleTheme()" title="Toggle light/dark" style="position:static; width:26px; height:26px; font-size:12px;">🌙</button>
     </div>
   </div>
 
@@ -2636,20 +2678,46 @@ function renderAwards(){
 }
 
 /* ---------------- THEME ---------------- */
+const THEMES = [
+ {id:'dark',name:'Original Dark',note:'Classic charcoal & green',colours:['#0b0e15','#1b2233','#2fa872']},
+ {id:'light',name:'Original Light',note:'Clean white & cool grey',colours:['#ffffff','#eef0f5','#2fa872']},
+ {id:'pink',name:'Pink & White',note:'Soft blush & crisp white',colours:['#fff5f8','#ffffff','#a53265']},
+ {id:'sage',name:'Sage & Cream',note:'A warm, calming light theme',colours:['#f7f5ec','#dce6d3','#506e43']},
+ {id:'lavender',name:'Lavender & Midnight',note:'Deep plum & soft lavender',colours:['#151222','#39304f','#c4a7ef']}
+];
 function applyTheme(t){
- document.documentElement.setAttribute('data-theme', t);
- try{ localStorage.setItem('capitolRiseTheme', t); }catch(e){}
- const icon = t==='light' ? '🌙' : '☀️';
- ['theme-btn-landing','theme-btn-app-2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=icon; });
+ if(!THEMES.some(theme=>theme.id===t)) t='dark';
+ document.documentElement.setAttribute('data-theme',t);
+ try{localStorage.setItem('capitolRiseTheme',t);}catch(e){}
+ document.querySelectorAll('[data-theme-choice]').forEach(button=>{
+  const selected=button.dataset.themeChoice===t;
+  button.setAttribute('aria-pressed',String(selected));
+  button.querySelector('.theme-check').textContent=selected?'✓':'';
+ });
+ const backgrounds={dark:'#0b0e15',light:'#f5f6f9',pink:'#fff5f8',sage:'#f7f5ec',lavender:'#151222'};
+ document.querySelector('meta[name="theme-color"]').content=backgrounds[t];
 }
-function toggleTheme(){
- const cur = document.documentElement.getAttribute('data-theme')==='light' ? 'dark' : 'light';
- applyTheme(cur);
+function openAesthetics(){
+ let dialog=document.getElementById('aesthetics-dialog');
+ if(!dialog){
+  dialog=document.createElement('dialog');
+  dialog.id='aesthetics-dialog';
+  dialog.className='aesthetics-dialog';
+  dialog.setAttribute('aria-labelledby','aesthetics-title');
+  dialog.innerHTML=`<button class="modal-close" aria-label="Close aesthetics" onclick="document.getElementById('aesthetics-dialog').close()">✕</button>
+   <h2 id="aesthetics-title">Make it yours</h2>
+   <p class="muted">Choose your BasePay palette. Saved on this browser.</p>
+   <div class="theme-options">${THEMES.map(t=>`<button class="theme-option" data-theme-choice="${t.id}" aria-pressed="false" onclick="applyTheme('${t.id}')"><span class="theme-swatches" aria-hidden="true">${t.colours.map(c=>`<i style="--swatch:${c}"></i>`).join('')}</span><span><strong>${t.name}</strong><small>${t.note}</small></span><span class="theme-check" aria-hidden="true"></span></button>`).join('')}</div>`;
+  document.body.appendChild(dialog);
+  dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom) dialog.close();}});
+ }
+ applyTheme(document.documentElement.getAttribute('data-theme'));
+ dialog.showModal();
 }
 function initTheme(){
  let t=null;
- try{ t = localStorage.getItem('capitolRiseTheme'); }catch(e){}
- if(!t){ t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark'; }
+ try{t=localStorage.getItem('capitolRiseTheme');}catch(e){}
+ if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
  applyTheme(t);
 }
 
