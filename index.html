@@ -326,6 +326,11 @@ canvas{width:100%; display:block;}
 
 table{font-family:var(--font-mono);}
 
+/* Display authentication first, keeping the simulator hidden until the user signs in. */
+body.bp-auth-locked .wrap{visibility:hidden}
+body.bp-auth-locked .bp-auth-close{display:none}
+body.bp-auth-locked .bp-auth-backdrop{background:var(--bg);padding:18px}
+body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 /* Supabase account overlay */
 
 .bp-auth-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:2000;display:flex;align-items:center;justify-content:center;padding:18px}
@@ -350,14 +355,14 @@ table{font-family:var(--font-mono);}
 <script defer src="supabase-config.js"></script>
 <script defer src="basepay-auth.js"></script>
 </head>
-<body>
+<body class="bp-auth-locked">
 <div class="wrap">
 
 <!-- ============ LANDING ============ -->
 <div id="landing">
   <div class="landing-hero">
     <button class="theme-toggle" id="theme-btn-landing" onclick="toggleTheme()" title="Toggle light/dark">🌙</button>
-    <span class="eyebrow">BasePay</span><button type="button" id="bp-account-landing" class="btn ghost" onclick="openBasePayAuth()" style="float:right;margin-right:32px">Sign in</button>
+    <span class="eyebrow">BasePay</span>
     <h1>Learn how UK money <span class="accent">actually</span> works.<br>Practise it without real risk.</h1>
     <p class="lead">A hands-on guide to money. Make choices, see what happens, and build confidence — without risking real money.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;"><span class="badge green">Learn by doing</span><span class="badge gray">UK-focused</span><span class="badge gray">No real money</span></div>
