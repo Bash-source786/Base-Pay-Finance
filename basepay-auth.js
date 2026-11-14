@@ -3,6 +3,14 @@
   'use strict';
   let client = null, user = null, activeUid = null, entering = null, generation = 0;
   let guest = false;
+  let submitting = false;
+  function setSubmitting(value) {
+    submitting = value;
+    for (const id of ['bp-auth-submit','bp-auth-switch','bp-auth-reset','bp-continue-guest']) {
+      const el = $(id);
+      if (el) el.disabled = value;
+    }
+  }
   function locked() { return document.body.classList.contains('bp-auth-locked'); }
   function requireLogin(note) {
     if (guest) return;
@@ -85,7 +93,7 @@
   }
   let mode = 'signin';
   function continueAsGuest() {
-    if (user || entering || mode === 'new-password') return;
+    if (submitting || user || entering || mode === 'new-password') return;
     if (guest) { allowAccess(); return; }
     generation++;
     guest = true;
@@ -137,31 +145,38 @@
   };
   async function submit(event) {
     event.preventDefault();
+    if (submitting) return;
     if (!client) { message('Supabase connection has not been configured yet.', 'error'); return; }
     const email = $('bp-auth-email').value.trim();
     const password = $('bp-auth-password').value;
     setPasswordVisible(false);
-    const button = $('bp-auth-submit');
-    button.disabled = true;
+    const submittedMode = mode;
+    setSubmitting(true);
     message('Please wait…');
     try {
       let result;
-      if (mode === 'new-password') result = await client.auth.updateUser({password});
-      else if (mode === 'signup') result = await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin + location.pathname}});
-      else if (mode === 'reset') result = await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin + location.pathname});
+      if (submittedMode === 'new-password') result = await client.auth.updateUser({password});
+      else if (submittedMode === 'signup') result = await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin + location.pathname}});
+      else if (submittedMode === 'reset') result = await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin + location.pathname});
       else result = await client.auth.signInWithPassword({email,password});
       if (result.error) throw result.error;
-      if (mode === 'new-password') { mode = 'signin'; enterAccount(user); }
-      else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent. Please check your inbox and your junk or spam folder.');
-      else if (mode === 'signup' && !result.data.session) message('Verification email sent. Please check your inbox and your junk or spam folder for the verification link, then sign in.');
-      else { message('Signed in successfully.'); if (mode === 'signup') setMode('signin'); }
+      try {
+        if (submittedMode === 'signin' && result.data?.user) {
+          window.basepayAnalyticsUser?.(result.data.user.id);
+          window.basepayTrack?.('sign_in_succeeded');
+        } else if (submittedMode === 'signup') window.basepayTrack?.('signup_submitted');
+      } catch (_) {}
+      if (submittedMode === 'new-password') { $('bp-auth-password').value = ''; mode = 'signin'; enterAccount(user); }
+      else if (submittedMode === 'reset') message('If an account exists for that email, a reset link has been sent. Please check your inbox and your junk or spam folder.');
+      else if (submittedMode === 'signup' && !result.data.session) message('Check your inbox and junk or spam folder for a verification link. If you already have an account, sign in instead.');
+      else { $('bp-auth-password').value = ''; message('Signed in successfully.'); if (submittedMode === 'signup') setMode('signin'); }
     } catch (error) {
       const emailLimit = error.code === 'over_email_send_rate_limit' || /email.*rate.*limit/i.test(error.message || '');
       message(emailLimit
         ? 'BasePay has temporarily reached its email-sending limit. Please wait before requesting another verification or reset email. Changing your email address may not help. If your account is already verified, you can still sign in with your password.'
         : error.message || 'Authentication failed. Please try again.', 'error');
     }
-    finally { button.disabled = false; }
+    finally { setSubmitting(false); }
   }
   async function signOut() {
     if (!client) return;
@@ -173,6 +188,10 @@
     } catch (error) { message(error.message || 'Sign-out failed.','error'); }
   }
   function clearAccount(){
+    try {
+      if (activeUid) window.basepayTrack?.('sign_out_succeeded');
+      window.basepayAnalyticsUser?.(null);
+    } catch (_) {}
     guest = false;
     generation++;
     activeUid = null; entering = null; user = null;
@@ -183,6 +202,7 @@
   }
   function enterAccount(current){
     if (!current) return;
+    try { window.basepayAnalyticsUser?.(current.id); } catch (_) {}
     if (activeUid === current.id) { allowAccess(); return; }
     if (entering) return;
     guest = false;
@@ -243,4 +263,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init);
   else init();
 })();
+
 
