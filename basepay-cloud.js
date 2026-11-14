@@ -5,6 +5,17 @@
   'use strict';
   let client = null, userId = null, pending = null, timer = null, writing = false;
   let version = 0, lastWritten = 0, currentWrite = null;
+  let guest = false;
+  const guestKey = 'basepayGuestSave:v1';
+  function activateGuest() {
+    logout();
+    guest = true;
+    status('Guest — this browser only');
+    try {
+      const save = JSON.parse(localStorage.getItem(guestKey) || 'null');
+      return save && save.mode && Number.isFinite(Number(save.day)) ? save : null;
+    } catch (_) { return null; }
+  }
   const key = id => 'basepayAccountSave:' + id;
   function status(label, error = false) {
     let el = document.getElementById('bp-save-status');
@@ -18,6 +29,7 @@
   }
   async function activate(user, supabaseClient) {
     if (!user || !user.id) throw new Error('No authenticated user.');
+    guest = false;
     client = supabaseClient;
     userId = user.id;
     pending = null;
@@ -38,6 +50,13 @@
     return save;
   }
   function enqueue(save) {
+    if (guest && save) {
+      try {
+        localStorage.setItem(guestKey, JSON.stringify(save));
+        status('Guest — saved in this browser only');
+      } catch (_) { status('Guest — storage unavailable; progress will be lost when you leave', true); }
+      return;
+    }
     if (!client || !userId || !save) return;
     pending = JSON.parse(JSON.stringify(save));
     cache(pending);
@@ -77,6 +96,7 @@
     if (pending) throw new Error('Your latest progress has not been uploaded yet. Please check your connection.');
   }
   function logout() {
+    guest = false;
     clearTimeout(timer);
     client = null; userId = null; pending = null; version = lastWritten = 0;
     status('');
@@ -84,5 +104,6 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden' && pending) flush();
   });
-  window.BasePayCloud = {activate,enqueue,flush,beforeSignOut,logout,userId:()=>userId};
+  window.BasePayCloud = {activate,activateGuest,enqueue,flush,beforeSignOut,logout,userId:()=>userId};
 })();
+

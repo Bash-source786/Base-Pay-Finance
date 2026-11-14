@@ -2,8 +2,10 @@
 (() => {
   'use strict';
   let client = null, user = null, activeUid = null, entering = null, generation = 0;
+  let guest = false;
   function locked() { return document.body.classList.contains('bp-auth-locked'); }
   function requireLogin(note) {
+    if (guest) return;
     document.body.classList.add('bp-auth-locked');
     panel();
     $('bp-auth-root').classList.remove('hide');
@@ -62,7 +64,11 @@
           <p>Signed in as <strong id="bp-auth-user"></strong></p>
           <button type="button" id="bp-auth-signout" class="btn ghost">Sign out</button>
         </div>
-        <p class="bp-auth-caption">Your lessons, achievements and simulator progress are saved to your account.</p>
+        <p class="bp-auth-caption">Sign in to save your lessons, achievements and simulator progress across devices.</p>
+        <div id="bp-guest-option">
+          <button type="button" id="bp-continue-guest" class="btn ghost block" aria-describedby="bp-guest-notice">Continue without signing in</button>
+          <p id="bp-guest-notice" class="bp-auth-caption">Guest progress is saved only in this browser on this device. It is not transferable and will not sync or be available on other devices or browsers. Clearing browser data or using private browsing may erase it. Guest progress is separate from account progress and is not automatically transferred when you sign in.</p>
+        </div>
       </section>`;
     document.body.appendChild(root);
     $('bp-auth-close').addEventListener('click', close);
@@ -74,9 +80,21 @@
     $('bp-auth-switch').addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
     $('bp-auth-reset').addEventListener('click', () => setMode(mode === 'reset' ? 'signin' : 'reset'));
     $('bp-auth-signout').addEventListener('click', signOut);
+    $('bp-continue-guest').addEventListener('click', continueAsGuest);
     return root;
   }
   let mode = 'signin';
+  function continueAsGuest() {
+    if (user || entering || mode === 'new-password') return;
+    if (guest) { allowAccess(); return; }
+    generation++;
+    guest = true;
+    try { window.basepayAnalyticsUser?.(null); } catch (_) {}
+    const saved = window.BasePayCloud.activateGuest();
+    window.basepayLoadGuestSave(saved);
+    updateButtons();
+    allowAccess();
+  }
   function setPasswordVisible(visible) {
     const input = $('bp-auth-password'), toggle = $('bp-password-toggle');
     if (!input || !toggle) return;
@@ -88,6 +106,7 @@
     mode = next;
     setPasswordVisible(false);
     const signedIn = !!user && next !== 'new-password';
+    $('bp-guest-option').classList.toggle('hide',!!user || next === 'new-password');
     $('bp-auth-title').textContent = signedIn ? 'Your account' : next === 'signup' ? 'Create an account' : next === 'reset' ? 'Reset your password' : next === 'new-password' ? 'Choose a new password' : 'Sign in';
     $('bp-auth-description').textContent = signedIn ? 'You are signed in to BasePay.' : next === 'reset' ? 'We will email you a password reset link.' : next === 'new-password' ? 'Enter your new password below.' : 'Use your email and password.';
     $('bp-signup-email-note').classList.toggle('hide',signedIn || next !== 'signup');
@@ -154,6 +173,7 @@
     } catch (error) { message(error.message || 'Sign-out failed.','error'); }
   }
   function clearAccount(){
+    guest = false;
     generation++;
     activeUid = null; entering = null; user = null;
     window.BasePayCloud?.logout();
@@ -165,6 +185,7 @@
     if (!current) return;
     if (activeUid === current.id) { allowAccess(); return; }
     if (entering) return;
+    guest = false;
     const expectedGeneration = generation, expectedId = current.id;
     document.body.classList.add('bp-auth-locked');
     panel();

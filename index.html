@@ -2811,6 +2811,11 @@ function basepayLoadAccountSave(saved){
       </div>`);
  }
 }
+// Guest progress uses its own browser-only save, never an account's cache.
+function basepayLoadGuestSave(saved){
+ basepayClearForSignOut();
+ if(saved && saved.day && saved.mode) resumeGame(saved);
+}
 function basepayImportOldSave(){
  const previous = loadLegacyState();
  if(!previous || !previous.day || !previous.mode) return;
@@ -2832,4 +2837,5 @@ window.addEventListener('DOMContentLoaded', ()=>{
 </script>
 </body>
 </html>
+
 
