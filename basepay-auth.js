@@ -49,7 +49,7 @@
     root.innerHTML = `
       <section class="bp-auth-panel" role="dialog" aria-modal="true" aria-labelledby="bp-auth-title">
         <button type="button" class="bp-auth-close" id="bp-auth-close" aria-label="Close">✕</button>
-        <span class="eyebrow">BasePay account</span>
+        <div class="bp-auth-brand"><img src="/assets/basepay-icon-bw.svg" alt="" width="54" height="54"><span>BasePay</span></div><span class="eyebrow">BasePay account</span>
         <h2 id="bp-auth-title">Sign in</h2>
         <p id="bp-auth-description" class="bp-auth-caption">Sign in with your email address.</p>
         <p id="bp-signup-email-note" class="bp-auth-caption hide" role="note">We’ll send you an email to verify your account. Please check your inbox, including your junk or spam folder, for the verification link.</p>
