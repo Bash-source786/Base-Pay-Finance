@@ -393,6 +393,73 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 .theme-option small{display:block;color:var(--text-dim);margin-top:2px}
 .theme-check{margin-left:auto;color:var(--accent);font-weight:700}
 
+
+/* BasePay coordinated appearance system: semantic design tokens, shared component rules.
+   Financial gains/losses retain meaningful green/red colours across all palettes. */
+:root{
+ --action:var(--green);--action-text:#062017;--action-soft:var(--green-dim);
+ --focus-ring:var(--green);--hero-glow:rgba(125,112,196,.07);
+ --interactive-hover:var(--surface-3);--selection-bg:var(--surface-2);
+}
+:root[data-theme="light"]{
+ --action:#286e59;--action-text:#fff;--action-soft:#e2f4ec;
+ --focus-ring:#286e59;--hero-glow:#d9e7df;--interactive-hover:#e5e8ef;
+}
+:root[data-theme="pink"]{
+ --bg:#faf5f2;--bg-elevated:#fffcfa;--surface:#fffcfa;--surface-2:#f7e8eb;--surface-3:#efd4dd;
+ --border:#e5cbd2;--border-soft:#f0e0e4;--text:#47343e;--text-dim:#735662;--text-faint:#876b77;
+ --accent:#98516e;--accent-ink:#fff;
+ --action:#98516e;--action-text:#fff;--action-soft:#f7e8eb;
+ --focus-ring:#98516e;--hero-glow:#efd4dd;--interactive-hover:#f2dce3;
+ --shadow-card:0 4px 18px #81465a0d;
+}
+:root[data-theme="sage"]{
+ --bg:#f7f5ec;--bg-elevated:#fffdf6;--surface:#fffdf6;--surface-2:#e8eee0;--surface-3:#d7e3d0;
+ --border:#cbd6c4;--border-soft:#e4e9db;--text:#293d30;--text-dim:#526a57;--text-faint:#677d6b;
+ --accent:#506f55;--accent-ink:#fff;
+ --action:#506f55;--action-text:#fff;--action-soft:#e8eee0;
+ --focus-ring:#506f55;--hero-glow:#d7e3d0;--interactive-hover:#dfe9d7;
+ --shadow-card:0 4px 18px #435d380c;
+}
+:root[data-theme="lavender"]{
+ --accent:#c4a7ef;--accent-ink:#21172f;
+ --action:#c4a7ef;--action-text:#21172f;--action-soft:#382b50;
+ --focus-ring:#c4a7ef;--hero-glow:#382b50;--interactive-hover:#39304f;
+ --shadow-card:0 4px 18px #0003;
+}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .btn.primary{
+ background:var(--action);border-color:var(--action);color:var(--action-text);
+}
+:root[data-theme="pink"] .btn.primary{background:var(--action);border-color:var(--action);color:var(--action-text)}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .brand .dot{
+ background:var(--action);
+}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .tabbtn.active{
+ color:var(--accent);border-top-color:var(--accent);
+}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .progress-bar:not(.amber)>div{
+ background:var(--action);
+}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .subtab.active{
+ background:var(--action);border-color:var(--action);color:var(--action-text);
+}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .section-title .more{
+ color:var(--accent);
+}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .landing-hero::before{
+ background:radial-gradient(ellipse at 30% 40%,var(--hero-glow),transparent 70%);
+}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) :is(.theme-option,.btn):hover{
+ background-color:var(--interactive-hover);
+}
+:root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"],[data-theme="light"]) .btn.primary:hover{
+ background:var(--action);filter:brightness(1.08);
+}
+:root :is(button,input,select,textarea,a):focus-visible{
+ outline:2px solid var(--focus-ring);outline-offset:3px;
+}
+:root ::selection{background:var(--selection-bg);color:var(--text)}
+
 </style>
 <script defer src="analytics-config.js"></script>
 <script defer src="analytics.js"></script>
