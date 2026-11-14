@@ -118,7 +118,7 @@
       else if (mode === 'reset') result = await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin + location.pathname});
       else result = await client.auth.signInWithPassword({email,password});
       if (result.error) throw result.error;
-      if (mode === 'new-password') { setMode('signin'); message('Password updated successfully.'); }
+      if (mode === 'new-password') { mode = 'signin'; allowAccess(); }
       else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent.');
       else if (mode === 'signup' && !result.data.session) message('Check your inbox for the confirmation link, then sign in.');
       else { message('Signed in successfully.'); if (mode === 'signup') setMode('signin'); }
