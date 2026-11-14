@@ -68,7 +68,7 @@
     root.addEventListener('click', e => { if (e.target === root && !locked()) close(); });
     $('bp-auth-form').addEventListener('submit', submit);
     $('bp-auth-switch').addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
-    $('bp-auth-reset').addEventListener('click', () => setMode('reset'));
+    $('bp-auth-reset').addEventListener('click', () => setMode(mode === 'reset' ? 'signin' : 'reset'));
     $('bp-auth-signout').addEventListener('click', signOut);
     return root;
   }
@@ -87,11 +87,12 @@
     $('bp-auth-email').classList.toggle('hide',next === 'new-password');
     $('bp-auth-email').required = next !== 'new-password';
     $('bp-auth-password').required = next !== 'reset';
-    $('bp-auth-password').autocomplete = next === 'signup' ? 'new-password' : 'current-password';
+    $('bp-auth-password').disabled = next === 'reset';
+    $('bp-auth-email').disabled = next === 'new-password';
+    $('bp-auth-password').autocomplete = (next === 'signup' || next === 'new-password') ? 'new-password' : 'current-password';
     $('bp-auth-submit').textContent = next === 'signup' ? 'Create account' : next === 'reset' ? 'Send reset link' : next === 'new-password' ? 'Save new password' : 'Sign in';
     $('bp-auth-switch').textContent = next === 'signup' ? 'Already have an account? Sign in' : 'Create an account';
     $('bp-auth-reset').textContent = next === 'reset' ? 'Back to sign in' : 'Forgot password?';
-    $('bp-auth-reset').onclick = next === 'reset' ? () => setMode('signin') : () => setMode('reset');
     if (signedIn) $('bp-auth-user').textContent = user.email || 'BasePay user';
     message('');
   }
@@ -118,14 +119,8 @@
       else if (mode === 'reset') result = await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin + location.pathname});
       else result = await client.auth.signInWithPassword({email,password});
       if (result.error) throw result.error;
-      try {
-        if (mode === 'signin' && result.data?.user) {
-          window.basepayAnalyticsUser?.(result.data.user.id);
-          window.basepayTrack?.('sign_in_succeeded');
-        } else if (mode === 'signup') window.basepayTrack?.('signup_submitted');
-      } catch (_) {}
       if (mode === 'new-password') { mode = 'signin'; enterAccount(user); }
-      else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent.');
+      else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent. Please check your inbox and your junk or spam folder.');
       else if (mode === 'signup' && !result.data.session) message('Verification email sent. Please check your inbox and your junk or spam folder for the verification link, then sign in.');
       else { message('Signed in successfully.'); if (mode === 'signup') setMode('signin'); }
     } catch (error) { message(error.message || 'Authentication failed. Please try again.', 'error'); }
@@ -141,10 +136,6 @@
     } catch (error) { message(error.message || 'Sign-out failed.','error'); }
   }
   function clearAccount(){
-    try {
-      if (activeUid) window.basepayTrack?.('sign_out_succeeded');
-      window.basepayAnalyticsUser?.(null);
-    } catch (_) {}
     generation++;
     activeUid = null; entering = null; user = null;
     window.BasePayCloud?.logout();
@@ -154,7 +145,6 @@
   }
   function enterAccount(current){
     if (!current) return;
-    try { window.basepayAnalyticsUser?.(current.id); } catch (_) {}
     if (activeUid === current.id) { allowAccess(); return; }
     if (entering) return;
     const expectedGeneration = generation, expectedId = current.id;
@@ -214,4 +204,3 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init);
   else init();
 })();
-
