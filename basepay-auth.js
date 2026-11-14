@@ -65,15 +65,18 @@
   function setMode(next) {
     mode = next;
     const signedIn = !!user;
-    $('bp-auth-title').textContent = signedIn ? 'Your account' : next === 'signup' ? 'Create an account' : next === 'reset' ? 'Reset your password' : 'Sign in';
-    $('bp-auth-description').textContent = signedIn ? 'You are signed in to BasePay.' : next === 'reset' ? 'We will email you a password reset link.' : 'Use your email and password.';
+    $('bp-auth-title').textContent = signedIn ? 'Your account' : next === 'signup' ? 'Create an account' : next === 'reset' ? 'Reset your password' : next === 'new-password' ? 'Choose a new password' : 'Sign in';
+    $('bp-auth-description').textContent = signedIn ? 'You are signed in to BasePay.' : next === 'reset' ? 'We will email you a password reset link.' : next === 'new-password' ? 'Enter your new password below.' : 'Use your email and password.';
     $('bp-auth-form').classList.toggle('hide',signedIn);
-    $('bp-auth-actions').classList.toggle('hide',signedIn);
+    $('bp-auth-actions').classList.toggle('hide',signedIn || next === 'new-password');
     $('bp-auth-signed-in').classList.toggle('hide',!signedIn);
     $('bp-password-wrap').classList.toggle('hide',next === 'reset');
+    $('bp-auth-email').parentElement.querySelector('label[for="bp-auth-email"]').classList.toggle('hide',next === 'new-password');
+    $('bp-auth-email').classList.toggle('hide',next === 'new-password');
+    $('bp-auth-email').required = next !== 'new-password';
     $('bp-auth-password').required = next !== 'reset';
     $('bp-auth-password').autocomplete = next === 'signup' ? 'new-password' : 'current-password';
-    $('bp-auth-submit').textContent = next === 'signup' ? 'Create account' : next === 'reset' ? 'Send reset link' : 'Sign in';
+    $('bp-auth-submit').textContent = next === 'signup' ? 'Create account' : next === 'reset' ? 'Send reset link' : next === 'new-password' ? 'Save new password' : 'Sign in';
     $('bp-auth-switch').textContent = next === 'signup' ? 'Already have an account? Sign in' : 'Create an account';
     $('bp-auth-reset').textContent = next === 'reset' ? 'Back to sign in' : 'Forgot password?';
     $('bp-auth-reset').onclick = next === 'reset' ? () => setMode('signin') : () => setMode('reset');
@@ -98,11 +101,13 @@
     message('Please wait…');
     try {
       let result;
-      if (mode === 'signup') result = await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin + location.pathname}});
+      if (mode === 'new-password') result = await client.auth.updateUser({password});
+      else if (mode === 'signup') result = await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin + location.pathname}});
       else if (mode === 'reset') result = await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin + location.pathname});
       else result = await client.auth.signInWithPassword({email,password});
       if (result.error) throw result.error;
-      if (mode === 'reset') message('If an account exists for that email, a reset link has been sent.');
+      if (mode === 'new-password') { setMode('signin'); message('Password updated successfully.'); }
+      else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent.');
       else if (mode === 'signup' && !result.data.session) message('Check your inbox for the confirmation link, then sign in.');
       else { message('Signed in successfully.'); if (mode === 'signup') setMode('signin'); }
     } catch (error) { message(error.message || 'Authentication failed. Please try again.', 'error'); }
@@ -120,10 +125,13 @@
     if (!window.supabase || !window.supabase.createClient) { console.warn('BasePay: Supabase client failed to load'); return; }
     try {
       client = window.supabase.createClient(window.BASEPAY_SUPABASE_URL,window.BASEPAY_SUPABASE_PUBLISHABLE_KEY);
-      client.auth.onAuthStateChange((_event,session) => {
+      client.auth.onAuthStateChange((event,session) => {
         user = session?.user || null;
         updateButtons();
-        if ($('bp-auth-root') && !$('bp-auth-root').classList.contains('hide')) setMode('signin');
+        if (event === 'PASSWORD_RECOVERY') {
+          window.openBasePayAuth();
+          setMode('new-password');
+        } else if ($('bp-auth-root') && !$('bp-auth-root').classList.contains('hide') && mode !== 'new-password') setMode('signin');
       });
       client.auth.getUser().then(({data,error}) => {
         if (!error) { user = data.user || null; updateButtons(); }
