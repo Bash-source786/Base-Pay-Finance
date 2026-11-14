@@ -351,7 +351,7 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 
 /* Additional palettes keep positive/negative financial colours meaningful. */
 :root[data-theme="pink"]{
- --bg:#fdf8f9; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#f8e5ea; --surface-3:#f0cdd6;
+ --bg:#f8f5ef; --bg-elevated:#fcfaf6; --surface:#fcfaf6; --surface-2:#f8e5ea; --surface-3:#f0cdd6;
  --border:#e6bdc8; --border-soft:#f3dde4; --text:#432d36; --text-dim:#755761; --text-faint:#896572;
  --green:#23734e; --green-dim:#e3f3e9; --red:#b52e4b; --red-dim:#ffe5eb;
  --amber:#865b12; --amber-dim:#fff0d3; --purple:#9a3569; --purple-dim:#fce7ef; --cyan:#256d83; --cyan-dim:#e5f3f7;
@@ -2683,7 +2683,7 @@ function renderAwards(){
 const THEMES = [
  {id:'dark',name:'Original Dark',note:'Classic charcoal & green',colours:['#0b0e15','#1b2233','#2fa872']},
  {id:'light',name:'Original Light',note:'Clean white & cool grey',colours:['#ffffff','#eef0f5','#2fa872']},
- {id:'pink',name:'Pink & White',note:'Pastel pink & clean white',colours:['#f0cdd6','#ffffff','#f8e5ea']},
+ {id:'pink',name:'Pink & White',note:'Pastel pink & warm off-white',colours:['#f0cdd6','#fcfaf6','#f8e5ea']},
  {id:'sage',name:'Sage & Cream',note:'A warm, calming light theme',colours:['#f7f5ec','#dce6d3','#506e43']},
  {id:'lavender',name:'Lavender & Midnight',note:'Deep plum & soft lavender',colours:['#151222','#39304f','#c4a7ef']}
 ];
@@ -2696,7 +2696,7 @@ function applyTheme(t){
   button.setAttribute('aria-pressed',String(selected));
   button.querySelector('.theme-check').textContent=selected?'✓':'';
  });
- const backgrounds={dark:'#0b0e15',light:'#f5f6f9',pink:'#fdf8f9',sage:'#f7f5ec',lavender:'#151222'};
+ const backgrounds={dark:'#0b0e15',light:'#f5f6f9',pink:'#f8f5ef',sage:'#f7f5ec',lavender:'#151222'};
  document.querySelector('meta[name="theme-color"]').content=backgrounds[t];
 }
 function openAesthetics(){
