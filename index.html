@@ -325,9 +325,30 @@ canvas{width:100%; display:block;}
 .guide-card h4{font-size:13px; font-weight:600;}
 
 table{font-family:var(--font-mono);}
+
+/* Supabase account overlay */
+
+.bp-auth-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:2000;display:flex;align-items:center;justify-content:center;padding:18px}
+.bp-auth-panel{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(100%,410px);max-height:94vh;overflow:auto;box-shadow:0 20px 50px #0006}
+.bp-auth-panel h2{margin:14px 0 6px;font-size:23px}
+.bp-auth-caption{font-size:12px;color:var(--text-dim);margin:8px 0 16px}
+.bp-auth-panel form{display:flex;flex-direction:column;gap:8px}
+.bp-auth-panel label{font-size:12px;color:var(--text-dim)}
+.bp-auth-panel input{width:100%;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:6px;font:inherit}
+.bp-auth-panel form button{margin-top:8px;padding:12px}
+.bp-auth-close{position:absolute;right:15px;top:15px;border:0;background:transparent;color:var(--text-dim);cursor:pointer}
+.bp-auth-actions{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.bp-auth-actions button{border:0;background:transparent;color:var(--cyan);font:inherit;font-size:12px;cursor:pointer;padding:0}
+#bp-auth-message{font-size:12px;min-height:18px;margin-top:12px}
+#bp-auth-signed-in p{overflow-wrap:anywhere}
+.bp-auth-panel .hide,.bp-auth-backdrop.hide{display:none!important}
+
 </style>
 <script defer src="analytics-config.js"></script>
 <script defer src="analytics.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script defer src="supabase-config.js"></script>
+<script defer src="basepay-auth.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -336,7 +357,7 @@ table{font-family:var(--font-mono);}
 <div id="landing">
   <div class="landing-hero">
     <button class="theme-toggle" id="theme-btn-landing" onclick="toggleTheme()" title="Toggle light/dark">🌙</button>
-    <span class="eyebrow">BasePay</span>
+    <span class="eyebrow">BasePay</span><button type="button" id="bp-account-landing" class="btn ghost" onclick="openBasePayAuth()" style="float:right;margin-right:32px">Sign in</button>
     <h1>Learn how UK money <span class="accent">actually</span> works.<br>Practise it without real risk.</h1>
     <p class="lead">A hands-on guide to money. Make choices, see what happens, and build confidence — without risking real money.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;"><span class="badge green">Learn by doing</span><span class="badge gray">UK-focused</span><span class="badge gray">No real money</span></div>
@@ -372,7 +393,7 @@ table{font-family:var(--font-mono);}
   <div class="topbar">
     <div class="brand"><span class="dot"></span> BasePay</div>
     <div class="stat-pills">
-      <span class="pill day" id="pill-day">Day 1</span>
+      <button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()" style="font-size:11px;padding:5px 8px">Sign in</button><span class="pill day" id="pill-day">Day 1</span>
       <span class="pill cash" id="pill-cash">£0</span>
       <span class="pill xp" id="pill-xp">0 XP</span>
       <button class="theme-toggle" id="theme-btn-app" onclick="showInterfaceTour(0)" title="How does this work?" style="position:static; width:26px; height:26px; font-size:12px;">❓</button>
