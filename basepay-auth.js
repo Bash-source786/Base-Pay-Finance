@@ -1,9 +1,7 @@
-/* BasePay browser authentication (Supabase Auth v2).
-   Login is optional; the existing simulator remains usable without an account.
-   Browser-only simulator saves are NOT yet synced between devices. */
+/* BasePay account authentication and per-user cloud save bootstrap. */
 (() => {
   'use strict';
-  let client = null, user = null;
+  let client = null, user = null, activeUid = null, entering = null, generation = 0;
   function locked() { return document.body.classList.contains('bp-auth-locked'); }
   function requireLogin(note) {
     document.body.classList.add('bp-auth-locked');
@@ -62,7 +60,7 @@
           <p>Signed in as <strong id="bp-auth-user"></strong></p>
           <button type="button" id="bp-auth-signout" class="btn ghost">Sign out</button>
         </div>
-        <p class="bp-auth-caption">Account sign-in does not yet transfer saved simulator progress between devices.</p>
+        <p class="bp-auth-caption">Your lessons, achievements and simulator progress are saved to your account.</p>
       </section>`;
     document.body.appendChild(root);
     $('bp-auth-close').addEventListener('click', close);
@@ -118,7 +116,7 @@
       else if (mode === 'reset') result = await client.auth.resetPasswordForEmail(email,{redirectTo:location.origin + location.pathname});
       else result = await client.auth.signInWithPassword({email,password});
       if (result.error) throw result.error;
-      if (mode === 'new-password') { mode = 'signin'; allowAccess(); }
+      if (mode === 'new-password') { mode = 'signin'; enterAccount(user); }
       else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent.');
       else if (mode === 'signup' && !result.data.session) message('Check your inbox for the confirmation link, then sign in.');
       else { message('Signed in successfully.'); if (mode === 'signup') setMode('signin'); }
@@ -127,9 +125,40 @@
   }
   async function signOut() {
     if (!client) return;
-    const {error} = await client.auth.signOut();
-    if (error) message(error.message,'error');
-    else { close(); }
+    try {
+      await window.BasePayCloud.beforeSignOut();
+      const {error} = await client.auth.signOut();
+      if (error) throw error;
+      clearAccount();
+    } catch (error) { message(error.message || 'Sign-out failed.','error'); }
+  }
+  function clearAccount(){
+    generation++;
+    activeUid = null; entering = null; user = null;
+    window.BasePayCloud?.logout();
+    window.basepayClearForSignOut?.();
+    updateButtons();
+    requireLogin();
+  }
+  function enterAccount(current){
+    if (!current) return;
+    if (activeUid === current.id) { allowAccess(); return; }
+    if (entering) return;
+    const expectedGeneration = generation, expectedId = current.id;
+    document.body.classList.add('bp-auth-locked');
+    panel();
+    $('bp-auth-root').classList.remove('hide');
+    message('Loading your saved progress…');
+    entering = window.BasePayCloud.activate(current,client).then(save => {
+      if (generation !== expectedGeneration || user?.id !== expectedId) return;
+      activeUid = expectedId;
+      window.basepayLoadAccountSave(save);
+      allowAccess();
+    }).catch(error => {
+      console.error('BasePay account loading failed',error);
+      if (generation === expectedGeneration) requireLogin(
+        'Could not load your account progress. '+ (error.message || 'Please try again.'));
+    }).finally(()=>{ entering = null; });
   }
   function init() {
     updateButtons();
@@ -147,19 +176,22 @@
           setMode('new-password');
           return;
         }
-        if (user) {
-          if (mode !== 'new-password') allowAccess();
-        } else {
-          requireLogin();
+        if (event === 'SIGNED_OUT') {
+          clearAccount();
+          return;
+        }
+        if (user && mode !== 'new-password') {
+          // Schedule outside the Auth callback so data queries don't block Auth.
+          setTimeout(() => enterAccount(user), 0);
         }
       });
-      // Verify the restored login session on every page load.
       client.auth.getUser().then(({data,error}) => {
         if (error || !data.user) {
-          user = null; updateButtons(); requireLogin();
+          if (!user) requireLogin();
         } else {
-          user = data.user; updateButtons();
-          if (mode !== 'new-password') allowAccess();
+          user = data.user;
+          updateButtons();
+          if (mode !== 'new-password') enterAccount(user);
         }
       }).catch(() => requireLogin('Unable to verify your session. Please sign in.'));
 
