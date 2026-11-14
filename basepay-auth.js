@@ -41,10 +41,6 @@
           </div>
           <button id="bp-auth-submit" class="btn primary" type="submit">Sign in</button>
         </form>
-        <div id="bp-social-actions" class="bp-social-actions">
-          <div class="bp-social-divider"><span>or continue with</span></div>
-          <button type="button" id="bp-google" class="bp-social-button">Continue with Google</button>
-        </div>
         <p id="bp-auth-message" role="status" aria-live="polite"></p>
         <div class="bp-auth-actions" id="bp-auth-actions">
           <button type="button" id="bp-auth-switch">Create an account</button>
@@ -63,7 +59,6 @@
     $('bp-auth-switch').addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
     $('bp-auth-reset').addEventListener('click', () => setMode('reset'));
     $('bp-auth-signout').addEventListener('click', signOut);
-    $('bp-google').addEventListener('click', () => socialSignIn('google'));
     return root;
   }
   let mode = 'signin';
@@ -74,7 +69,6 @@
     $('bp-auth-description').textContent = signedIn ? 'You are signed in to BasePay.' : next === 'reset' ? 'We will email you a password reset link.' : next === 'new-password' ? 'Enter your new password below.' : 'Use your email and password.';
     $('bp-auth-form').classList.toggle('hide',signedIn);
     $('bp-auth-actions').classList.toggle('hide',signedIn || next === 'new-password');
-    $('bp-social-actions').classList.toggle('hide',signedIn || next === 'new-password' || next === 'reset');
     $('bp-auth-signed-in').classList.toggle('hide',!signedIn);
     $('bp-password-wrap').classList.toggle('hide',next === 'reset');
     $('bp-auth-email').parentElement.querySelector('label[for="bp-auth-email"]').classList.toggle('hide',next === 'new-password');
@@ -118,22 +112,6 @@
       else { message('Signed in successfully.'); if (mode === 'signup') setMode('signin'); }
     } catch (error) { message(error.message || 'Authentication failed. Please try again.', 'error'); }
     finally { button.disabled = false; }
-  }
-  async function socialSignIn(provider) {
-    if (!client) { message('Supabase connection has not been configured yet.', 'error'); return; }
-    const button = $('bp-google');
-    button.disabled = true;
-    message('Redirecting to ' + 'Google' + '…');
-    try {
-      const {error} = await client.auth.signInWithOAuth({
-        provider,
-        options: {redirectTo: location.origin + location.pathname}
-      });
-      if (error) throw error;
-    } catch (error) {
-      message(error.message || 'Could not start social sign-in.', 'error');
-      button.disabled = false;
-    }
   }
   async function signOut() {
     if (!client) return;
