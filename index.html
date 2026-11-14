@@ -351,12 +351,13 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 
 /* Additional palettes keep positive/negative financial colours meaningful. */
 :root[data-theme="pink"]{
- --bg:#fff5f8; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#fce7ef; --surface-3:#f7d6e3;
- --border:#e5bdcd; --border-soft:#f1dce5; --text:#392330; --text-dim:#755161; --text-faint:#896373;
+ --bg:#fdf8f9; --bg-elevated:#ffffff; --surface:#ffffff; --surface-2:#f8e5ea; --surface-3:#f0cdd6;
+ --border:#e6bdc8; --border-soft:#f3dde4; --text:#432d36; --text-dim:#755761; --text-faint:#896572;
  --green:#23734e; --green-dim:#e3f3e9; --red:#b52e4b; --red-dim:#ffe5eb;
  --amber:#865b12; --amber-dim:#fff0d3; --purple:#9a3569; --purple-dim:#fce7ef; --cyan:#256d83; --cyan-dim:#e5f3f7;
- --accent:#a53265; --accent-ink:#ffffff; --shadow-card:0 2px 8px #6e254c08; color-scheme:light;
+ --accent:#98506a; --accent-ink:#ffffff; --shadow-card:0 2px 8px #6e254c08; color-scheme:light;
 }
+:root[data-theme="pink"] .landing-hero::before{background:radial-gradient(ellipse at 25% 35%, #f0cdd6 0%, transparent 70%);opacity:.55}
 :root[data-theme="sage"]{
  --bg:#f7f5ec; --bg-elevated:#fffef8; --surface:#fffef8; --surface-2:#eaf0e3; --surface-3:#dce6d3;
  --border:#c4ceba; --border-soft:#e1e5d5; --text:#28362a; --text-dim:#53634e; --text-faint:#697661;
@@ -374,6 +375,7 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 :root{--accent:var(--green);--accent-ink:#062017;color-scheme:dark}
 :root[data-theme="light"]{color-scheme:light}
 :root:is([data-theme="pink"],[data-theme="sage"],[data-theme="lavender"]) .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+:root[data-theme="pink"] .btn.primary{background:#f0cdd6;border-color:#e6bdc8;color:#563342}
 .landing-hero .accent{color:var(--accent)}
 .brand .dot{background:var(--accent)}
 .tabbtn.active{border-top-color:var(--accent)}
@@ -2681,7 +2683,7 @@ function renderAwards(){
 const THEMES = [
  {id:'dark',name:'Original Dark',note:'Classic charcoal & green',colours:['#0b0e15','#1b2233','#2fa872']},
  {id:'light',name:'Original Light',note:'Clean white & cool grey',colours:['#ffffff','#eef0f5','#2fa872']},
- {id:'pink',name:'Pink & White',note:'Soft blush & crisp white',colours:['#fff5f8','#ffffff','#a53265']},
+ {id:'pink',name:'Pink & White',note:'Pastel pink & clean white',colours:['#f0cdd6','#ffffff','#f8e5ea']},
  {id:'sage',name:'Sage & Cream',note:'A warm, calming light theme',colours:['#f7f5ec','#dce6d3','#506e43']},
  {id:'lavender',name:'Lavender & Midnight',note:'Deep plum & soft lavender',colours:['#151222','#39304f','#c4a7ef']}
 ];
@@ -2694,7 +2696,7 @@ function applyTheme(t){
   button.setAttribute('aria-pressed',String(selected));
   button.querySelector('.theme-check').textContent=selected?'✓':'';
  });
- const backgrounds={dark:'#0b0e15',light:'#f5f6f9',pink:'#fff5f8',sage:'#f7f5ec',lavender:'#151222'};
+ const backgrounds={dark:'#0b0e15',light:'#f5f6f9',pink:'#fdf8f9',sage:'#f7f5ec',lavender:'#151222'};
  document.querySelector('meta[name="theme-color"]').content=backgrounds[t];
 }
 function openAesthetics(){
