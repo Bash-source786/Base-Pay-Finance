@@ -4,7 +4,7 @@
 (() => {
   'use strict';
   let client = null, userId = null, pending = null, timer = null, writing = false;
-  let version = 0, lastWritten = 0;
+  let version = 0, lastWritten = 0, currentWrite = null;
   const key = id => 'basepayAccountSave:' + id;
   function status(label, error = false) {
     let el = document.getElementById('bp-save-status');
@@ -47,11 +47,13 @@
     timer = setTimeout(flush, 400);
   }
   async function flush() {
-    if (writing || !pending || !client || !userId) return;
+    if (writing) return currentWrite;
+    if (!pending || !client || !userId) return;
     clearTimeout(timer);
     const selected = pending, savedVersion = version;
     const targetUser = userId, targetClient = client;
     writing = true;
+    currentWrite = (async () => {
     try {
       const { error } = await targetClient.from('basepay_saves')
         .upsert({user_id: targetUser, save_data:selected, updated_at:new Date().toISOString()},
@@ -65,11 +67,13 @@
     } catch (error) {
       console.warn('BasePay cloud save:',error);
       if (userId === targetUser) status('Cloud save failed — progress kept on this device', true);
-    } finally { writing = false; }
+    } finally { writing = false; currentWrite = null; }
+    })();
+    return currentWrite;
   }
   async function beforeSignOut() {
     clearTimeout(timer);
-    if (pending) await flush();
+    for(let i=0; i<3 && pending; i++) await flush();
     if (pending) throw new Error('Your latest progress has not been uploaded yet. Please check your connection.');
   }
   function logout() {
