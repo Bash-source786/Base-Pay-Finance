@@ -49,6 +49,7 @@
           <div id="bp-password-wrap">
             <label for="bp-auth-password">Password</label>
             <input id="bp-auth-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Your password">
+            <button id="bp-password-toggle" class="btn ghost" type="button" aria-controls="bp-auth-password" aria-pressed="false" style="margin:0 0 6px;padding:6px 10px;font-size:12px">Show password</button>
           </div>
           <button id="bp-auth-submit" class="btn primary" type="submit">Sign in</button>
         </form>
@@ -67,14 +68,25 @@
     $('bp-auth-close').addEventListener('click', close);
     root.addEventListener('click', e => { if (e.target === root && !locked()) close(); });
     $('bp-auth-form').addEventListener('submit', submit);
+    $('bp-password-toggle').addEventListener('click', () => {
+      setPasswordVisible($('bp-auth-password').type === 'password');
+    });
     $('bp-auth-switch').addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
     $('bp-auth-reset').addEventListener('click', () => setMode(mode === 'reset' ? 'signin' : 'reset'));
     $('bp-auth-signout').addEventListener('click', signOut);
     return root;
   }
   let mode = 'signin';
+  function setPasswordVisible(visible) {
+    const input = $('bp-auth-password'), toggle = $('bp-password-toggle');
+    if (!input || !toggle) return;
+    input.type = visible ? 'text' : 'password';
+    toggle.textContent = visible ? 'Hide password' : 'Show password';
+    toggle.setAttribute('aria-pressed', String(visible));
+  }
   function setMode(next) {
     mode = next;
+    setPasswordVisible(false);
     const signedIn = !!user && next !== 'new-password';
     $('bp-auth-title').textContent = signedIn ? 'Your account' : next === 'signup' ? 'Create an account' : next === 'reset' ? 'Reset your password' : next === 'new-password' ? 'Choose a new password' : 'Sign in';
     $('bp-auth-description').textContent = signedIn ? 'You are signed in to BasePay.' : next === 'reset' ? 'We will email you a password reset link.' : next === 'new-password' ? 'Enter your new password below.' : 'Use your email and password.';
@@ -96,7 +108,7 @@
     if (signedIn) $('bp-auth-user').textContent = user.email || 'BasePay user';
     message('');
   }
-  function close() { if (locked()) return; const root = $('bp-auth-root'); if (root) root.classList.add('hide'); }
+  function close() { if (locked()) return; setPasswordVisible(false); const root = $('bp-auth-root'); if (root) root.classList.add('hide'); }
   window.openBasePayAuth = () => {
     panel();
     $('bp-auth-root').classList.remove('hide');
@@ -109,6 +121,7 @@
     if (!client) { message('Supabase connection has not been configured yet.', 'error'); return; }
     const email = $('bp-auth-email').value.trim();
     const password = $('bp-auth-password').value;
+    setPasswordVisible(false);
     const button = $('bp-auth-submit');
     button.disabled = true;
     message('Please wait…');
@@ -123,7 +136,12 @@
       else if (mode === 'reset') message('If an account exists for that email, a reset link has been sent. Please check your inbox and your junk or spam folder.');
       else if (mode === 'signup' && !result.data.session) message('Verification email sent. Please check your inbox and your junk or spam folder for the verification link, then sign in.');
       else { message('Signed in successfully.'); if (mode === 'signup') setMode('signin'); }
-    } catch (error) { message(error.message || 'Authentication failed. Please try again.', 'error'); }
+    } catch (error) {
+      const emailLimit = error.code === 'over_email_send_rate_limit' || /email.*rate.*limit/i.test(error.message || '');
+      message(emailLimit
+        ? 'BasePay has temporarily reached its email-sending limit. Please wait before requesting another verification or reset email. Changing your email address may not help. If your account is already verified, you can still sign in with your password.'
+        : error.message || 'Authentication failed. Please try again.', 'error');
+    }
     finally { button.disabled = false; }
   }
   async function signOut() {
@@ -204,3 +222,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',init);
   else init();
 })();
+
