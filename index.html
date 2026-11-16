@@ -186,7 +186,19 @@ main{flex:1; padding:12px 14px 90px 14px; overflow-x:hidden;}
 .trading-mode-switch .btn{flex:1;}
 .trade-quote{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border-soft);}
 .trade-quote:last-child{border-bottom:0;}
-.trade-quote select,.trade-quote input{max-width:100px;}
+.trade-quote > div:first-child{flex:1;min-width:0;}
+.trade-quote .trade-result{text-align:right;}
+.trade-desk-grid{display:grid;gap:12px;margin-top:12px;}
+.trade-panel{min-width:0;margin:0;}
+.trade-panel h3{font-size:13px;margin:0 0 8px;}
+.trade-quotes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0;}
+.trade-quotes div{border:1px solid var(--border-soft);border-radius:9px;padding:7px 6px;}
+.trade-quotes span,.trade-quotes b{display:block;}
+.trade-quotes b,.trade-result{font-variant-numeric:tabular-nums;}
+.trade-candles{display:block;width:100%;height:auto;color:var(--text-dim);font-family:var(--font-mono);}
+.trade-note{font-size:12px;color:var(--text-dim);margin:6px 0;line-height:1.5;}
+.trade-time{margin-top:10px;flex-wrap:wrap;}
+@media(min-width:650px){.trade-desk-grid{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);}}
 @media(min-width:650px){.wrap{max-width:760px}.feature-grid{grid-template-columns:repeat(4,1fr)}.tabbar-inner{max-width:760px}.landing-hero{padding-top:50px}.mode-cards{display:grid;grid-template-columns:1fr 1fr}}
 .faint{color:var(--text-faint); font-size:11px;}
 .big-num{font-size:25px; font-weight:600; letter-spacing:-.3px; font-family:var(--font-mono);}
@@ -715,7 +727,7 @@ const LESSONS = [
  quiz:{q:"What is the key difference between day trading and long-term investing?",options:["Day trading tries to benefit from short-term moves and usually closes positions the same day","Day trading guarantees faster profits","Long-term investing cannot lose money"],correct:0,explain:"Day trading focuses on short-term price moves. It is uncertain, time-intensive and can lead to rapid losses; long-term investing has different goals and risks."}},
 {id:16,cat:'Trading',title:'Position Size, Stops and Risk',gate:null,
  practiceAction:"goToInvestTab()", practiceLabel:"Invest → practise with simulated funds",
- body:"A risk plan starts before a trade. Position size is how much exposure you take; a stop-loss is an instruction intended to close a position if price reaches a chosen level, though real execution can differ in fast markets and gaps. Never assume a stop makes a trade safe. Decide what loss you could tolerate, avoid putting all your money into one idea, and remember that a small planned loss can still occur repeatedly. The simulator does not model every real-world fee, spread, slippage or tax.",
+ body:"A risk plan starts before a trade. Position size is how much exposure you take; a stop-loss is an instruction intended to close a position if price reaches a chosen level, though real execution can differ in fast markets and gaps. Never assume a stop makes a trade safe. Decide what loss you could tolerate, avoid putting all your money into one idea, and remember that a small planned loss can still occur repeatedly. The trading desk includes a bid–ask spread and lets you practise buy limit orders. Real trades can also involve commissions, taxes and slippage.",
  quiz:{q:"What is a sensible reason to decide your position size before entering a trade?",options:["To know how much you could lose if the trade moves against you","To make the market move in your favour","To guarantee that a stop-loss executes at the exact price"],correct:0,explain:"Position sizing helps you understand exposure before acting. Stops and limits do not guarantee a specific outcome, especially in fast or illiquid markets."}},
 {id:17,cat:'Trading',title:'Spreads, Volatility and Trading Discipline',gate:null,
  practiceAction:"goToInvestTab()", practiceLabel:"Invest → compare a price move with your result",
@@ -1076,6 +1088,20 @@ const ASSET_TYPE_INFO = {
  crypto:{label:'Crypto', vol:'Extreme', ret:'Highly unpredictable', liq:'High but highly volatile', unlockKey:'risky_assets'},
  sukuk:{label:'Sukuk (Shariah)', vol:'Very low', ret:'Modest, profit-rate based', liq:'High — sell any time', unlockKey:'risky_assets'},
 };
+
+/* ---------------- DATA: PRACTICE MARKETS ---------------- */
+const TRADING_MARKETS = [
+ ...ASSETS.filter(a=>a.type==='share'||a.type==='index'),
+ {id:'xau', type:'gold', name:'Gold (XAU/GBP)', price:2450, vol:.015, unit:'troy oz', spread:.0012},
+ {id:'lum', type:'forex', name:'Lumen (LUM/GBP)', price:1.2480, vol:.008, unit:'LUM', spread:.0005},
+ {id:'nvr', type:'forex', name:'Novar (NVR/GBP)', price:.7240, vol:.012, unit:'NVR', spread:.0009},
+];
+const TRADING_NEWS = [
+ {id:'lum', title:'Lumen central bank surprises with a rate rise', detail:'Higher-than-expected rates can increase demand for a currency. Watch LUM/GBP and its spread.', shock:.007},
+ {id:'nvr', title:'Novar inflation comes in below expectations', detail:'Traders bring forward expectations of a rate cut. In this scenario, NVR weakens against sterling.', shock:-.008},
+ {id:'xau', title:'Demand for gold rises as markets turn cautious', detail:'Some investors turn to gold during uncertainty. Watch XAU/GBP and the cost of entering during the move.', shock:.009},
+];
+const TRADING_SESSION_STEPS = 26;
 
 /* ---------------- DATA: PROPERTY LISTINGS ---------------- */
 const PROPERTY_LISTINGS = [
@@ -1561,7 +1587,15 @@ function pensionTopUp(amount){
 }
 
 /* ---------------- SHARIAH / ELECTORAL ROLL / BUDGET ---------------- */
-function toggleShariah(){ state.shariah=!state.shariah; saveState(); renderAll(); }
+function toggleShariah(){
+ state.shariah=!state.shariah;
+ if(state.shariah && state.dayTradeOrders?.length){
+  for(let i=state.dayTradeOrders.length-1;i>=0;i--){
+   if(tradingMarket(state.dayTradeOrders[i].assetId).conventional) releaseTradingOrder(i);
+  }
+ }
+ saveState(); renderAll();
+}
 function toggleElectoralRoll(){
  if(!state.electoralRoll){ state.electoralRoll=true; state.credit.score=Math.min(999,state.credit.score+12); toast('Registered on the electoral roll — a small, permanent credit score boost applied.'); }
  else { state.electoralRoll=false; state.credit.score=Math.max(0,state.credit.score-12); }
@@ -2464,6 +2498,14 @@ function visibleAssets(){
 function renderInvest(){
  ensureTradingState();
  const el = document.getElementById('tab-invest');
+ const activeControl = el.contains(document.activeElement) ? document.activeElement.id : '';
+ const ticket = el.querySelector('#dt-ticket form');
+ const draft = ticket && ticket.dataset.market === state.tradingMarketId ? {
+  type:ticket.querySelector('#dt-order-type').value,
+  budget:ticket.querySelector('#dt-budget').value,
+  limit:ticket.querySelector('#dt-limit').value
+ } : null;
+ const openPanels = [...el.querySelectorAll('.trade-desk details[open]')].map(panel=>panel.id);
  const wrapperOpts = wrapperOptionsForMode();
  const cap = tradeCapActive();
  let html = `
@@ -2513,73 +2555,327 @@ function renderInvest(){
  // sparklines + ticker
  visibleAssets().forEach(a=>{ const c=document.getElementById('spark-'+a.id); if(c) drawLineChart(c, state.priceHistory[a.id].slice(-30), priceOf(a.id)>=state.priceHistory[a.id][Math.max(0,state.priceHistory[a.id].length-31)]?'#3ddc97':'#ff6b6b'); });
  renderTicker('invest-ticker');
+ openPanels.forEach(id=>{ document.getElementById(id).open=true; });
+ const nextTicket = el.querySelector('#dt-ticket form');
+ if(draft && nextTicket.dataset.market === state.tradingMarketId){
+  nextTicket.querySelector('#dt-order-type').value=draft.type;
+  nextTicket.querySelector('#dt-budget').value=draft.budget;
+  if(draft.type==='limit') nextTicket.querySelector('#dt-limit').value=draft.limit;
+  updateTradeTicket(state.tradingMarketId);
+ }
+ if(activeControl){
+  const replacement=document.getElementById(activeControl);
+  (replacement?.matches(':disabled')?document.getElementById('dt-session'):replacement)?.focus({preventScroll:true});
+ }
 }
+function tradingMarket(id){ return TRADING_MARKETS.find(market=>market.id===id); }
+function tradingMarkets(){ return TRADING_MARKETS.filter(market=>!(state.shariah && market.conventional)); }
 function ensureTradingState(){
- if(!state.dayTradeCash && state.dayTradeCash!==0) state.dayTradeCash=10000;
- if(!Array.isArray(state.dayTrades)) state.dayTrades=[];
- if(!Array.isArray(state.dayTradeHistory)) state.dayTradeHistory=[];
- if(!state.intradayPrices) state.intradayPrices=Object.fromEntries(ASSETS.filter(a=>a.type==='share'||a.type==='index').map(a=>[a.id,priceOf(a.id)]));
- if(typeof state.intradayStep!=='number') state.intradayStep=0;
+ state.dayTradeCash ??= 10000;
+ state.dayTrades ??= [];
+ state.dayTradeHistory ??= [];
+ state.dayTradeOrders ??= [];
+ state.intradayPrices ??= {};
+ state.intradayCandles ??= {};
+ state.intradayStep ??= 0;
+ state.tradingSession ??= 1;
+ state.tradingNews ??= [];
+ for(const market of TRADING_MARKETS){
+  state.intradayPrices[market.id] ??= priceOf(market.id) ?? market.price;
+  state.intradayCandles[market.id] ??= [];
+ }
 }
-function intradayPrice(id){ ensureTradingState(); return state.intradayPrices[id] || priceOf(id); }
+function tradeDigits(market){ return market.type==='forex'?4:2; }
+function tradePrice(market, price){
+ const digits=tradeDigits(market);
+ return '£'+price.toLocaleString('en-GB',{minimumFractionDigits:digits,maximumFractionDigits:digits});
+}
+function tradeMoney(amount){ return Math.round(amount*100)/100; }
+function tradingQuote(market, mid=state.intradayPrices[market.id],
+ news=state.tradingNews.find(event=>event.step===state.intradayStep && event.id===market.id)){
+ const scale=10**tradeDigits(market);
+ const halfSpread=mid*(market.spread ?? .001)*(news?2.5:1)/2;
+ const bid=Math.max(1,Math.floor((mid-halfSpread)*scale));
+ const ask=Math.max(bid+1,Math.ceil((mid+halfSpread)*scale));
+ return {bid:bid/scale,ask:ask/scale};
+}
+function logDayTrade(entry){
+ state.dayTradeHistory.unshift({session:state.tradingSession,step:state.intradayStep,...entry});
+ if(state.dayTradeHistory.length>80) state.dayTradeHistory.length=80;
+}
+function fillDayBuy(market, units, price, action){
+ const amount=tradeMoney(units*price);
+ const position=state.dayTrades.find(item=>item.assetId===market.id);
+ if(position){
+  const cost=(position.cost ?? position.units*position.avgPrice)+amount;
+  position.units+=units;
+  position.cost=cost;
+  position.avgPrice=cost/position.units;
+ }else{
+  state.dayTrades.push({assetId:market.id,units,avgPrice:amount/units,cost:amount,openedStep:state.intradayStep});
+ }
+ logDayTrade({assetId:market.id,price,amount,action});
+ state.xp+=1;
+ return amount;
+}
+function releaseTradingOrder(index, refund=true){
+ const [order]=state.dayTradeOrders.splice(index,1);
+ if(refund) state.dayTradeCash=tradeMoney(state.dayTradeCash+order.budget);
+ return order;
+}
+function fillTradingOrders(market, ask){
+ let filled=0;
+ for(let i=0;i<state.dayTradeOrders.length;){
+  const order=state.dayTradeOrders[i];
+  if(order.assetId!==market.id || ask>order.limit){ i++; continue; }
+  const amount=fillDayBuy(market,order.budget/order.limit,ask,'Limit buy filled');
+  releaseTradingOrder(i,false);
+  state.dayTradeCash=tradeMoney(state.dayTradeCash+order.budget-amount);
+  filled++;
+ }
+ return filled;
+}
 function stepIntraday(steps){
  ensureTradingState();
- for(let i=0;i<steps;i++){
-  state.intradayStep++;
-  ASSETS.filter(a=>a.type==='share'||a.type==='index').forEach(a=>{
-   const p=intradayPrice(a.id); const shock=(Math.random()-.5)*2*(a.vol*0.32);
-   state.intradayPrices[a.id]=Math.max(.05,p*(1+shock));
-  });
+ let fills=0;
+ const end=Math.min(state.intradayStep+steps,TRADING_SESSION_STEPS);
+ while(state.intradayStep<end){
+  const step=++state.intradayStep;
+  let event;
+  if([4,12,20].includes(step)){
+   const remaining=TRADING_NEWS.filter(news=>!state.tradingNews.some(previous=>previous.id===news.id));
+   event=remaining[Math.floor(Math.random()*remaining.length)];
+   if(event) state.tradingNews.unshift({id:event.id,step});
+  }
+  for(const market of TRADING_MARKETS){
+   const open=state.intradayPrices[market.id];
+   const shock=event?.id===market.id?event.shock:0;
+   const prices=[open];
+   let mid=open;
+   for(let tick=0;tick<4;tick++){
+    mid=Math.max(.05,mid*(1+(Math.random()-.5)*market.vol*.32+(tick===0?shock:0)));
+    prices.push(mid);
+    fills+=fillTradingOrders(market,tradingQuote(market,mid).ask);
+   }
+   state.intradayPrices[market.id]=mid;
+   state.intradayCandles[market.id].push({open,high:Math.max(...prices),low:Math.min(...prices),close:mid,step});
+  }
  }
  saveState(); renderAll();
+ if(fills) toast(fills===1?'One limit order filled.':`${fills} limit orders filled.`);
 }
-function dayTradeBuy(id){
- ensureTradingState(); const input=document.getElementById('dt-buy-'+id); const amount=Number(input&&input.value);
- if(!amount||amount<=0){toast('Enter a simulated amount to trade.','warn');return;}
- if(amount>state.dayTradeCash){toast('Not enough simulated trading cash. Close a position or use a smaller size.','warn');return;}
- const price=intradayPrice(id), units=amount/price;
- let h=state.dayTrades.find(x=>x.assetId===id);
- if(h){const total=h.units* h.avgPrice+amount;h.units+=units;h.avgPrice=total/h.units;}
- else state.dayTrades.push({assetId:id,units,avgPrice:price,openedStep:state.intradayStep});
- state.dayTradeCash-=amount; state.dayTradeHistory.unshift({step:state.intradayStep,action:'Buy',assetId:id,price,amount});
- state.xp+=1; saveState();renderAll();toast('Simulated day-trade opened.');
+function submitDayTrade(event, id){
+ event.preventDefault();
+ ensureTradingState();
+ const market=tradingMarkets().find(item=>item.id===id);
+ if(!market || state.intradayStep>=TRADING_SESSION_STEPS) return;
+ const budget=tradeMoney(Number(document.getElementById('dt-budget').value));
+ if(!Number.isFinite(budget) || budget<1 || budget>state.dayTradeCash){
+  toast('Enter at least £1 within your available practice cash.','warn'); return;
+ }
+ const {ask}=tradingQuote(market);
+ const isLimit=document.getElementById('dt-order-type').value==='limit';
+ const limit=isLimit?Number(document.getElementById('dt-limit').value):ask;
+ if(!Number.isFinite(limit) || limit<10**-tradeDigits(market)){
+  toast('Enter a valid limit price.','warn'); return;
+ }
+ state.dayTradeCash=tradeMoney(state.dayTradeCash-budget);
+ if(limit<ask){
+  state.dayTradeOrders.push({assetId:id,limit,budget});
+ }else{
+  const amount=fillDayBuy(market,budget/limit,ask,isLimit?'Limit buy filled':'Market buy');
+  state.dayTradeCash=tradeMoney(state.dayTradeCash+budget-amount);
+ }
+ document.getElementById('dt-budget').value='';
+ saveState(); renderAll();
+ toast(limit<ask?'Buy limit queued. Cash reserved until it fills or you cancel.':'Simulated position bought.');
+}
+function cancelDayOrder(index){
+ if(!state.dayTradeOrders[index]) return;
+ releaseTradingOrder(index);
+ saveState(); renderAll(); toast('Order cancelled. Reserved cash released.');
+}
+function tradingPositionValue(position){
+ return tradeMoney(position.units*tradingQuote(tradingMarket(position.assetId)).bid);
+}
+function tradingPositionPnl(position){
+ return tradeMoney(tradingPositionValue(position)-(position.cost ?? position.units*position.avgPrice));
+}
+function closeDayPosition(position, action){
+ const price=tradingQuote(tradingMarket(position.assetId)).bid;
+ const amount=tradingPositionValue(position), pnl=tradingPositionPnl(position);
+ state.dayTradeCash=tradeMoney(state.dayTradeCash+amount);
+ logDayTrade({assetId:position.assetId,price,amount,pnl,action});
+ return pnl;
 }
 function dayTradeSell(id){
- ensureTradingState(); const h=state.dayTrades.find(x=>x.assetId===id);
- if(!h){toast('You do not have an open position in this asset.','warn');return;}
- const price=intradayPrice(id), value=h.units*price, pnl=value-h.units*h.avgPrice;
- state.dayTradeCash+=value; state.dayTradeHistory.unshift({step:state.intradayStep,action:'Sell',assetId:id,price,amount:value,pnl});
- state.dayTrades=state.dayTrades.filter(x=>x!==h);saveState();renderAll();toast(`Position closed. Simulated ${pnl>=0?'gain':'loss'}: ${fmt2(pnl)}.`);
+ const position=state.dayTrades.find(item=>item.assetId===id);
+ if(!position) return;
+ const pnl=closeDayPosition(position,'Position closed');
+ state.dayTrades=state.dayTrades.filter(item=>item!==position);
+ saveState(); renderAll(); toast(`Position closed · ${tradingPnl(pnl)}`);
 }
 function closeTradingSession(){
- ensureTradingState();
- if(state.dayTrades.length){
-  state.dayTrades.slice().forEach(h=>{const value=h.units*intradayPrice(h.assetId);state.dayTradeCash+=value;state.dayTradeHistory.unshift({step:state.intradayStep,action:'Session close',assetId:h.assetId,price:intradayPrice(h.assetId),amount:value,pnl:value-h.units*h.avgPrice});});
-  state.dayTrades=[];
- }
+ if((state.dayTrades.length || state.dayTradeOrders.length) &&
+    !window.confirm('End this session? Open positions will sell at the current bid and pending orders will be cancelled.')) return;
+ for(const position of state.dayTrades) closeDayPosition(position,'Session close');
+ while(state.dayTradeOrders.length) releaseTradingOrder(0);
+ state.dayTrades=[];
  state.intradayStep=0;
- ASSETS.filter(a=>a.type==='share'||a.type==='index').forEach(a=>state.intradayPrices[a.id]=priceOf(a.id));
- saveState();renderAll();toast('Session closed. Open day-trade positions were closed at simulated prices.');
+ state.tradingSession++;
+ state.tradingNews=[];
+ state.intradayPrices={};
+ state.intradayCandles={};
+ saveState(); renderAll(); toast('New practice session started.');
+}
+function tradingPnl(value){ return (value<0?'−':value>0?'+':'')+fmt2(Math.abs(value)); }
+function tradingTime(step){
+ const minutes=9*60+step*15;
+ return `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;
+}
+function renderTradeChart(market){
+ const candles=state.intradayCandles[market.id];
+ const last=candles.at(-1);
+ if(!last) return '<p class="trade-note">Advance time to draw your first 15-minute candle.</p>';
+ const low=Math.min(...candles.map(candle=>candle.low)), high=Math.max(...candles.map(candle=>candle.high));
+ const y=value=>9+112*(high-value)/(high-low || 1);
+ const spacing=Math.min(29,324/candles.length);
+ const width=Math.min(12,spacing*.62);
+ return `<svg class="trade-candles" viewBox="0 0 400 150" aria-hidden="true">
+  ${[high,(high+low)/2,low].map((value,i)=>`<line x1="0" x2="324" y1="${9+56*i}" y2="${9+56*i}" stroke="var(--border)"/><text x="330" y="${13+56*i}" font-size="11" fill="currentColor">${tradePrice(market,value)}</text>`).join('')}
+  ${candles.map((candle,i)=>{
+   const x=(i+.5)*spacing, top=Math.min(y(candle.open),y(candle.close));
+   const colour=candle.close>=candle.open?'var(--green)':'var(--red)';
+   return `<line x1="${x}" x2="${x}" y1="${y(candle.high)}" y2="${y(candle.low)}" stroke="${colour}"/><rect x="${x-width/2}" y="${top}" width="${width}" height="${Math.max(1,Math.abs(y(candle.open)-y(candle.close)))}" fill="${colour}"/>`;
+  }).join('')}
+  <text x="0" y="144" font-size="11" fill="currentColor">${tradingTime(candles[0].step-1)}</text>
+  <text x="324" y="144" font-size="11" text-anchor="end" fill="currentColor">${tradingTime(last.step)}</text>
+ </svg>
+ <p class="trade-note">Latest candle · Open ${tradePrice(market,last.open)} · High ${tradePrice(market,last.high)} · Low ${tradePrice(market,last.low)} · Close ${tradePrice(market,last.close)}</p>`;
+}
+function renderTradeMarket(market){
+ const {bid,ask}=tradingQuote(market);
+ const spread=market.type==='forex'?`${((ask-bid)*10000).toFixed(0)} pips`:fmt2(ask-bid);
+ const note=market.type==='forex'
+  ?`The rate is pounds per 1 ${market.unit}, a fictional currency. One pip is £0.0001 in this pair.`
+  :market.type==='gold'?'The gold quote is pounds per troy ounce. Fractional ounces can be traded.':'The quote is pounds per unit. Fractional units can be traded.';
+ return `<div class="trade-quotes">
+  <div><span class="muted">Bid · sell</span><b>${tradePrice(market,bid)}</b></div>
+  <div><span class="muted">Ask · buy</span><b>${tradePrice(market,ask)}</b></div>
+  <div><span class="muted">Spread</span><b>${spread}</b></div>
+ </div>
+ ${renderTradeChart(market)}
+ <p class="trade-note">${note}</p>`;
+}
+function renderTradeTicket(market){
+ const {ask}=tradingQuote(market);
+ const step=10**-tradeDigits(market);
+ return `<h3>Buy ${market.name}</h3>
+ <form data-market="${market.id}" onsubmit="submitDayTrade(event,'${market.id}')">
+  <fieldset ${state.intradayStep>=TRADING_SESSION_STEPS?'disabled':''} style="border:0;padding:0;margin:0;min-width:0;">
+   <div class="field"><label for="dt-order-type">Order type</label><select id="dt-order-type" onchange="updateTradeTicket('${market.id}')"><option value="market">Market buy</option><option value="limit">Limit buy</option></select></div>
+   <div class="field"><label for="dt-budget">Trade budget (£)</label><input id="dt-budget" type="number" min="1" step="0.01" inputmode="decimal" required oninput="updateTradeTicket('${market.id}')"></div>
+   <div class="field" id="dt-limit-field" hidden><label for="dt-limit">Maximum buy price (£ per ${market.unit || 'unit'})</label><input id="dt-limit" type="number" min="${step}" step="${step}" value="${ask.toFixed(tradeDigits(market))}" inputmode="decimal" disabled oninput="updateTradeTicket('${market.id}')"></div>
+   <p class="trade-note" id="dt-preview" aria-live="polite">Market buys fill at the current ask.</p>
+   <button class="btn primary block" id="dt-place-buy">Place market buy</button>
+  </fieldset>
+ </form>`;
+}
+function updateTradeTicket(id){
+ const market=tradingMarket(id);
+ const isLimit=document.getElementById('dt-order-type').value==='limit';
+ const limitField=document.getElementById('dt-limit');
+ const amount=Number(document.getElementById('dt-budget').value);
+ document.getElementById('dt-limit-field').hidden=!isLimit;
+ limitField.disabled=!isLimit;
+ limitField.required=isLimit;
+ document.getElementById('dt-place-buy').textContent=isLimit?'Place limit buy':'Place market buy';
+ const {ask,bid}=tradingQuote(market);
+ const limit=Number(limitField.value);
+ let preview=isLimit?'A buy limit fills only at your price or lower. Cash is reserved while it waits.':'Market buys fill at the current ask.';
+ if(Number.isFinite(amount) && amount>=1){
+  if(isLimit && limit>0){
+   const units=amount/limit;
+   preview=`Up to ${fmt2(amount)} reserved for ${units.toLocaleString('en-GB',{maximumSignificantDigits:4})} ${market.unit || 'units'}. ${limit>=ask?'The current ask meets your limit.':'The order waits for the ask to reach your limit.'}`;
+  }else if(!isLimit){
+   const units=amount/ask;
+   preview=`About ${units.toLocaleString('en-GB',{maximumSignificantDigits:4})} ${market.unit || 'units'} at the current ask. Buying and selling immediately would cost ${fmt2(tradeMoney(amount-tradeMoney(units*bid)))} in spread.`;
+  }
+ }
+ document.getElementById('dt-preview').textContent=preview;
+}
+function selectTradeMarket(id){
+ const market=tradingMarkets().find(item=>item.id===id);
+ if(!market) return;
+ state.tradingMarketId=id;
+ document.getElementById('dt-market-data').innerHTML=renderTradeMarket(market);
+ document.getElementById('dt-ticket').innerHTML=renderTradeTicket(market);
 }
 function renderTradingDesk(){
- ensureTradingState();
- const choices=ASSETS.filter(a=>(a.type==='share'||a.type==='index') && !(state.shariah&&a.conventional));
- const positions=state.dayTrades.reduce((sum,h)=>sum+h.units*intradayPrice(h.assetId),0);
- const unrealised=state.dayTrades.reduce((sum,h)=>sum+h.units*(intradayPrice(h.assetId)-h.avgPrice),0);
+ const choices=tradingMarkets();
+ const selected=choices.find(market=>market.id===state.tradingMarketId) || tradingMarket('xau');
+ state.tradingMarketId=selected.id;
+ const positions=state.dayTrades.reduce((sum,position)=>sum+tradingPositionValue(position),0);
+ const unrealised=state.dayTrades.reduce((sum,position)=>sum+tradingPositionPnl(position),0);
+ const reserved=state.dayTradeOrders.reduce((sum,order)=>sum+order.budget,0);
+ const sessionEnded=state.intradayStep>=TRADING_SESSION_STEPS;
+ const news=state.tradingNews[0];
  return `<div class="section-title"><h2>Trading desk</h2><span class="badge cyan">Practice only</span></div>
- <div class="card">
-  <div style="font-size:14px;font-weight:600;">Day trading</div><p class="faint" style="margin-top:3px;">Buy and close simulated positions during a short practice session. This wallet is separate from your main money.</p>
-  <div class="card-row"><span class="muted">Practice cash</span><b>${fmt2(state.dayTradeCash)}</b></div>
-  <div class="card-row"><span class="muted">Open positions</span><span>${fmt2(positions)}</span></div>
-  <div class="card-row"><span class="muted">Unrealised P/L</span><span class="${unrealised>=0?'pos':'neg'}">${unrealised>=0?'+':''}${fmt2(unrealised)}</span></div>
-  <div class="card-row"><span class="muted">Practice time</span><span>Step ${state.intradayStep} · each step ≈ 15 min</span></div>
-  <div class="btn-row" style="margin-top:10px;flex-wrap:wrap;"><button class="btn" onclick="stepIntraday(1)">+15 min</button><button class="btn" onclick="stepIntraday(4)">+1 hour</button><button class="btn" onclick="stepIntraday(16)">+4 hours</button><button class="btn" onclick="closeTradingSession()">End session</button></div>
-  <details class="details-card"><summary>How day trading works</summary><div class="details-content">A day trade aims to benefit from short-term price movements and normally closes within the same day. Price changes are randomised for practice; they are not live prices or predictions. The model omits many real costs, including broker fees, taxes, spreads and slippage. Real day trading can cause rapid losses, and this simulation does not establish that a strategy works.</div></details>
-  <details class="details-card"><summary>Choose a share to practise</summary><div class="details-content">${choices.slice(0,8).map(a=>`<div class="trade-quote"><div style="min-width:0;flex:1;"><b>${a.name}</b><div class="faint">${a.sector} · £${intradayPrice(a.id).toFixed(2)}</div></div><input id="dt-buy-${a.id}" type="number" min="1" placeholder="£ amount" aria-label="Simulated amount for ${a.name}"><button class="btn primary sm" onclick="dayTradeBuy('${a.id}')">Buy</button></div>`).join('')}</div></details>
-  <div style="font-size:12px;font-weight:600;margin:10px 0 4px;">Open positions</div>
-  ${state.dayTrades.length?state.dayTrades.map(h=>{const a=assetById(h.assetId),value=h.units*intradayPrice(h.assetId),pnl=value-h.units*h.avgPrice;return `<div class="trade-quote"><div style="flex:1;min-width:0;"><b>${a.name}</b><div class="faint">${h.units.toFixed(3)} units · avg £${h.avgPrice.toFixed(2)}</div></div><div style="text-align:right;"><b>${fmt2(value)}</b><div class="${pnl>=0?'pos':'neg'} faint">${pnl>=0?'+':''}${fmt2(pnl)}</div></div><button class="btn sm" onclick="dayTradeSell('${a.id}')">Close</button></div>`;}).join(''):'<p class="faint">No open positions yet. Open the share list above to try a simulated trade.</p>'}
-  ${state.dayTradeHistory.length?`<details class="details-card"><summary>Recent trade history</summary><div class="details-content">${state.dayTradeHistory.slice(0,8).map(h=>`<div class="card-row" style="padding:5px 0;border-bottom:1px solid var(--border-soft);"><span>${h.action} · ${assetById(h.assetId).name}</span><span>${fmt2(h.amount)}${typeof h.pnl==='number'?` <span class="${h.pnl>=0?'pos':'neg'}">(${h.pnl>=0?'+':''}${fmt2(h.pnl)})</span>`:''}</span></div>`).join('')}</div></details>`:''}
- </div>`;
+ <section class="card trade-desk" aria-label="Practice trading desk">
+  <div class="card-row"><b>Session ${state.tradingSession} · ${tradingTime(Math.min(state.intradayStep,TRADING_SESSION_STEPS))}</b><span class="badge gray">${sessionEnded?'Market closed':'Market open'}</span></div>
+  <p class="trade-note">Trade shares, gold and fictional currencies using a separate practice wallet and simulated prices.</p>
+  <div class="card-row"><span class="muted">Available cash</span><b>${fmt2(state.dayTradeCash)}</b></div>
+  ${reserved?`<div class="card-row"><span class="muted">Cash reserved for orders</span><span>${fmt2(reserved)}</span></div>`:''}
+  <div class="card-row"><span class="muted">Open positions at bid</span><span>${fmt2(positions)}</span></div>
+  <div class="card-row"><span class="muted">Unrealised profit or loss</span><span class="${unrealised>=0?'pos':'neg'}">${tradingPnl(unrealised)}</span></div>
+  <div class="btn-row trade-time">
+   <button class="btn" id="dt-time-15" onclick="stepIntraday(1)" ${sessionEnded?'disabled':''}>+15 min</button>
+   <button class="btn" id="dt-time-60" onclick="stepIntraday(4)" ${sessionEnded?'disabled':''}>+1 hour</button>
+   <button class="btn" id="dt-time-240" onclick="stepIntraday(16)" ${sessionEnded?'disabled':''}>+4 hours</button>
+   <button class="btn" id="dt-session" onclick="closeTradingSession()">${sessionEnded?'Start next session':'End session'}</button>
+  </div>
+  ${sessionEnded?'<p class="trade-note">The final quote stays visible. You can close positions at the final bid or settle them automatically when you start the next session.</p>':''}
+  <div class="trade-desk-grid">
+   <div class="card tight trade-panel">
+    <div class="field"><label for="dt-market">Market</label><select id="dt-market" onchange="selectTradeMarket(this.value)">
+    ${[['gold','Gold'],['forex','Fictional forex'],['share','Shares'],['index','Index funds']].map(([type,label])=>
+     `<optgroup label="${label}">${choices.filter(market=>market.type===type).map(market=>`<option value="${market.id}" ${selected.id===market.id?'selected':''}>${market.name}</option>`).join('')}</optgroup>`).join('')}
+    </select></div>
+    <div id="dt-market-data">${renderTradeMarket(selected)}</div>
+   </div>
+   <div class="card tight trade-panel" id="dt-ticket">${renderTradeTicket(selected)}</div>
+  </div>
+  <details class="details-card" id="dt-news" ${news?'open':''}><summary>Simulated market news</summary>
+   <div class="details-content">${news?state.tradingNews.map(item=>{
+    const story=TRADING_NEWS.find(entry=>entry.id===item.id);
+    return story?`<p><b>${tradingTime(item.step)} · ${story.title}</b><br>${story.detail}</p>`:'';
+   }).join(''):'Advance time to see fictional announcements move market prices.'}</div>
+  </details>
+  ${state.dayTradeOrders.length?`<h3 class="trade-note">Pending buy orders</h3>${state.dayTradeOrders.map((order,index)=>{
+   const market=tradingMarket(order.assetId);
+   return `<div class="trade-quote"><div><b>${market.name}</b><div class="muted">Limit ${tradePrice(market,order.limit)} · ${fmt2(order.budget)} reserved</div></div><button class="btn sm" onclick="cancelDayOrder(${index})" aria-label="Cancel ${market.name} buy order at ${tradePrice(market,order.limit)}">Cancel</button></div>`;
+  }).join('')}`:''}
+  <h3 class="trade-note">Open positions</h3>
+  ${state.dayTrades.length?state.dayTrades.map(position=>{
+   const market=tradingMarket(position.assetId),pnl=tradingPositionPnl(position);
+   return `<div class="trade-quote">
+    <div><b>${market.name}</b><div class="muted">${position.units.toLocaleString('en-GB',{maximumSignificantDigits:5})} ${market.unit || 'units'} · avg ${tradePrice(market,position.avgPrice)}</div></div>
+    <div class="trade-result"><b>${fmt2(tradingPositionValue(position))}</b><div class="${pnl>=0?'pos':'neg'}">${tradingPnl(pnl)}</div></div>
+    <button class="btn sm" onclick="dayTradeSell('${market.id}')" aria-label="Close ${market.name} position">Close</button>
+   </div>`;
+  }).join(''):'<p class="trade-note">Your practice positions will appear here.</p>'}
+  ${state.dayTradeHistory.length?`<details class="details-card" id="dt-history"><summary>Recent trade history</summary><div class="details-content">${state.dayTradeHistory.slice(0,12).map(entry=>{
+   const market=tradingMarket(entry.assetId);
+   return `<div class="trade-quote"><div><b>${entry.action} · ${market.name}</b><div>${entry.session?`Session ${entry.session} · ${tradingTime(entry.step)} · `:''}${tradePrice(market,entry.price)} per ${market.unit || 'unit'}</div></div><div class="trade-result">${fmt2(entry.amount)}${typeof entry.pnl==='number'?`<div class="${entry.pnl>=0?'pos':'neg'}">${tradingPnl(entry.pnl)}</div>`:''}</div></div>`;
+  }).join('')}</div></details>`:''}
+  <details class="details-card" id="dt-help"><summary>How to read the trading desk</summary><div class="details-content">
+   <p>Each candle shows the first, highest, lowest and last midpoint in a 15-minute period. Market buys fill at the ask, and closing a position sells at the bid. The gap is the spread.</p>
+   <p>A buy limit sets your highest acceptable price. It can stay pending even if a candle dips below the limit, because the ask can still be higher. Ending the session cancels pending orders and releases their cash.</p>
+   <p>Try buying a small amount of gold and looking at the open profit or loss before advancing time. Then watch how a fictional news release affects a currency pair and its spread.</p>
+   <p>This cash-only simulator models bid and ask prices. Real markets can also involve leverage, commissions, taxes, slippage and partial fills.</p>
+   <button type="button" class="btn sm" onclick="goToLesson(17)">Learn about spreads and volatility</button>
+  </div></details>
+ </section>`;
 }
 
 function renderAssetRow(a, wrapperOpts){
@@ -3108,6 +3404,7 @@ async function basepayImportOldSave(){
 function basepayClearForSignOut(){
  closeModal();
  state = null;
+ document.getElementById('tab-invest').replaceChildren();
  learnSub = 'lessons';
  bankSub = 'account';
  toolsSub = 'budget';
