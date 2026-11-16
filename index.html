@@ -354,8 +354,6 @@ canvas{width:100%; display:block;}
 
 .bank-card{border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:8px; background:var(--surface); cursor:pointer;}
 .bank-card.selected{border-color:var(--cyan); background:var(--cyan-dim);}
-.leaderboard-row{display:flex; justify-content:space-between; padding:6px 0; font-size:12px; border-bottom:1px solid var(--border-soft); font-family:var(--font-mono);}
-.leaderboard-row.you{color:var(--green); font-weight:600;}
 
 /* guide card */
 .guide-card{border-left:3px solid var(--purple); padding-left:14px;}
@@ -2120,7 +2118,7 @@ const TAB_INTROS = {
  credit:{ic:'💳', title:'Borrowing and your score', body:"Cards, loans and Buy Now Pay Later all live here — different ways of borrowing money and paying it back later, usually with interest. How you handle them here shapes your credit score, which affects the rates you're offered. It unlocks once you've done a couple of key lessons in Learn."},
  tools:{ic:'🧮', title:'Calculators that do the maths', body:"Quick calculators for real decisions — plan a budget, check how much ISA allowance you've used, project long-term growth, work out a mortgage, or see how long it'd take to clear a card balance. Pop in some numbers and see the result instantly."},
  news:{ic:'📰', title:"What's happening", body:"Headlines about the market and the world show up here as time passes. Nothing to do here except read — advance a day or two from Home and check back."},
- awards:{ic:'🏆', title:'Your progress', body:"Track your XP, unlock achievements as you hit milestones, and see a fun (fictional) comparison against some other players. None of this affects your money — it's just for tracking progress."},
+ awards:{ic:'🏆', title:'Your progress', body:"Track your XP and see which achievements you’ve unlocked."},
 };
 const TAB_INTRO_SHORT = {
  home:"A quick view of your progress and the next useful action.",
@@ -3395,13 +3393,8 @@ function renderNews(){
 }
 
 /* ---------------- AWARDS TAB ---------------- */
-const FAKE_PEERS = ["Amara","Jayden","Priya","Callum","Nia","Ollie","Freya","Rhys","Sana","Leo"];
 function renderAwards(){
  const el = document.getElementById('tab-awards');
- const fhs = computeFinancialHealthScore();
- const peers = FAKE_PEERS.map((n,i)=>({name:n, score: Math.max(20,Math.min(98, 40+Math.round(Math.sin(i*7+state.day/9)*25)+i*3))}));
- peers.push({name:'You', score:fhs, you:true});
- peers.sort((a,b)=>b.score-a.score);
  el.innerHTML = `
   ${renderTabIntro('awards')}
   <div class="card">
@@ -3411,10 +3404,6 @@ function renderAwards(){
   <div class="section-title"><h2>Achievements (${state.achievements.length}/${ACHIEVEMENTS.length})</h2></div>
   <div class="ach-grid">
    ${ACHIEVEMENTS.map(a=>{ const got=state.achievements.includes(a.id); return `<div class="ach-card ${got?'':'locked'}"><div class="ico">${a.ico}</div><h4>${a.name}</h4><p>${a.desc}</p></div>`; }).join('')}
-  </div>
-  <div class="section-title"><h2>Simulated peers</h2><span class="faint">just for fun</span></div>
-  <div class="card">
-   ${peers.map(p=>`<div class="leaderboard-row ${p.you?'you':''}"><span>${p.name}</span><span>${p.score}</span></div>`).join('')}
   </div>`;
 }
 
