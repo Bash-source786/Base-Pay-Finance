@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0e15">
+<title>Privacy | BasePay</title>
+<link rel="icon" href="/favicon.ico">
+<style>
+:root{color-scheme:dark;background:#0b0e15;color:#eef1f7;font:16px/1.65 system-ui,sans-serif}
+body{margin:0}
+main{max-width:640px;margin:0 auto;padding:32px 20px 48px}
+h1{margin:18px 0 0;font-size:2rem;letter-spacing:-.04em}
+h2{font-size:1.1rem;margin:0 0 5px}
+p{margin:0;color:#c7cfde}
+section{background:#141925;border:1px solid #30394b;border-radius:14px;margin-top:12px;padding:16px}
+a{color:#8ce5ef;text-underline-offset:3px}
+a:focus-visible{outline:2px solid #8ce5ef;outline-offset:4px}
+:root[data-theme="light"]{color-scheme:light;background:#f5f6f9;color:#172035}
+:root[data-theme="pink"]{color-scheme:light;background:#f8f5ef;color:#382733}
+:root[data-theme="sage"]{color-scheme:light;background:#f7f5ec;color:#26392c}
+:root[data-theme="lavender"]{background:#151222;color:#f2ecff}
+:root[data-theme="light"] section{background:#fff;border-color:#cbd3e0}
+:root[data-theme="pink"] section{background:#fff8f6;border-color:#dcc1ca}
+:root[data-theme="sage"] section{background:#fffdf6;border-color:#c6d2c3}
+:root[data-theme="lavender"] section{background:#221b31;border-color:#4a3c5e}
+:root:is([data-theme="light"],[data-theme="pink"],[data-theme="sage"]) p{color:inherit}
+:root[data-theme="light"] a{color:#165771}
+:root[data-theme="pink"] a{color:#7a3556}
+:root[data-theme="sage"] a{color:#25553c}
+:root[data-theme="lavender"] a{color:#dbc7ff}
+</style>
+<script>
+try { document.documentElement.dataset.theme = localStorage.getItem('capitolRiseTheme') || 'dark'; } catch (_) {}
+</script>
+</head>
+<body>
+<main>
+  <a href="./">← Back to BasePay</a>
+  <h1>Privacy</h1>
+  <p>Here’s what BasePay saves and how you can ask us about it.</p>
+  <section>
+    <h2>When you make an account</h2>
+    <p>We use your email address to sign you in, verify your account and help you reset your password. Supabase runs our sign-in and stores your three save files so you can continue on another device. A file can include lessons you’ve completed, choices you’ve made and your pretend money. This browser also keeps a local copy of your account progress.</p>
+  </section>
+  <section>
+    <h2>When you play as a guest</h2>
+    <p>Your progress stays in this browser’s storage, called localStorage. It does not sync to other devices or move into an account automatically. You can clear it with <strong>Reset guest progress</strong> in Home settings. Your colour theme is also stored in this browser.</p>
+  </section>
+  <section>
+    <h2>Optional analytics</h2>
+    <p>If you choose to allow analytics, PostHog helps us see which pages and lessons people use. If you’re signed in, it can link that activity to your account ID. BasePay does not send PostHog your email, password or financial inputs, or record your screen. You can change your mind using <strong>Analytics preferences</strong> in BasePay.</p>
+  </section>
+  <section>
+    <h2>All money in the simulator is pretend</h2>
+    <p>You can practise with simulated money. BasePay does not move real money or connect to your bank. Please keep bank details and other private information out of the simulator.</p>
+  </section>
+  <section>
+    <h2>Contact BasePay</h2>
+    <p>For questions about your data or to ask for a copy or deletion, use the <a href="https://github.com/Bash-source786/Base-Pay-Finance/issues/new">BasePay contact page on GitHub</a> to ask the maintainer for a private way to get in touch. GitHub issues are public. Leave out your email, password and any other private details.</p>
+  </section>
+</main>
+</body>
+</html>

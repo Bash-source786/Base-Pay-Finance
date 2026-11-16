@@ -51,7 +51,7 @@
         <button type="button" class="bp-auth-close" id="bp-auth-close" aria-label="Close">✕</button>
         <div class="bp-auth-brand"><img src="/assets/basepay-icon-bw.svg" alt="" width="54" height="54"><span>BasePay</span></div>
         <p class="bp-auth-caption">Practise budgeting, saving, credit and investing with UK money lessons and risk-free simulations.</p>
-        <h2 id="bp-auth-title">Sign in</h2>
+        <h2 id="bp-auth-title" tabindex="-1">Sign in</h2>
         <p id="bp-auth-description" class="bp-auth-caption">Sign in with your email address.</p>
         <p id="bp-signup-email-note" class="bp-auth-caption hide" role="note">We’ll send you an email to verify your account. Please check your inbox, including your junk or spam folder, for the verification link.</p>
         <form id="bp-auth-form">
@@ -78,6 +78,14 @@
           <button type="button" id="bp-continue-guest" class="btn ghost block" aria-describedby="bp-guest-notice">Continue without signing in</button>
           <p id="bp-guest-notice" class="bp-auth-caption">Guest progress is saved only in this browser on this device. It is not transferable and will not sync or be available on other devices or browsers. Clearing browser data or using private browsing may erase it. Guest progress is separate from account progress and is not automatically transferred when you sign in.</p>
         </div>
+        <footer class="footer-note">
+          <p>BasePay is an educational simulation. It is not financial advice.</p>
+          <nav aria-label="Money guidance and privacy">
+            <a href="https://www.gov.uk/">GOV.UK</a>
+            <a href="https://www.moneyhelper.org.uk/en">MoneyHelper</a>
+            <a href="privacy.html">Privacy</a>
+          </nav>
+        </footer>
       </section>`;
     document.body.appendChild(root);
     $('bp-auth-close').addEventListener('click', close);
@@ -212,11 +220,11 @@
     panel();
     $('bp-auth-root').classList.remove('hide');
     message('Loading your saved progress…');
-    entering = window.BasePayCloud.activate(current,client).then(save => {
+    entering = window.BasePayCloud.activate(current,client).then(slots => {
       if (generation !== expectedGeneration || user?.id !== expectedId) return;
       activeUid = expectedId;
-      window.basepayLoadAccountSave(save);
       allowAccess();
+      window.basepayLoadAccountFiles(slots);
     }).catch(error => {
       console.error('BasePay account loading failed',error);
       if (generation === expectedGeneration) requireLogin(
@@ -224,6 +232,7 @@
     }).finally(()=>{ entering = null; });
   }
   function init() {
+    if (window.BasePayCloud.takeGuestRestart()) continueAsGuest();
     updateButtons();
     if (!configured()) { requireLogin('Sign-in configuration is unavailable. Please contact BasePay support.'); return; }
     if (!window.supabase || !window.supabase.createClient) { console.warn('BasePay: Supabase client failed to load'); requireLogin('Sign-in service could not load. Please refresh this page.'); return; }

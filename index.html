@@ -282,17 +282,18 @@ input[type=range]{width:100%; accent-color:var(--green);}
 .news-item .day-tag{font-size:10px; color:var(--text-faint); font-family:var(--font-mono);}
 
 /* lesson list */
-.lesson-item{display:flex; align-items:center; gap:12px; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:8px; background:var(--surface); cursor:pointer;}
+.lesson-item{width:100%; color:var(--text); text-align:left; display:flex; align-items:center; gap:12px; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:8px; background:var(--surface); cursor:pointer;}
 .lesson-item.done{border-color:var(--green-dim);}
 .lesson-num{width:26px; height:26px; border-radius:50%; background:var(--bg-elevated); display:flex; align-items:center; justify-content:center; font-size:11px; flex:0 0 auto; border:1px solid var(--border); font-family:var(--font-mono);}
 .lesson-item.done .lesson-num{background:var(--green); color:#062017; border-color:var(--green);}
 .lesson-body{flex:1;}
-.lesson-body h4{font-size:12.5px; margin:0 0 2px 0; font-weight:600;}
+.lesson-body .lesson-title{display:block; font-size:12.5px; margin:0 0 2px 0; font-weight:600;}
 .lesson-body .cat{font-size:10px; color:var(--text-faint);}
 
 /* modal */
-.modal-backdrop{position:fixed; inset:0; background:rgba(4,6,11,.6); z-index:100; display:flex; align-items:flex-end; justify-content:center;}
-.modal-backdrop.hide{display:none;}
+.modal-backdrop{position:fixed; inset:0; margin:0; padding:0; border:0; width:100%; height:100%; max-width:none; max-height:none; background:transparent; color:var(--text);}
+.modal-backdrop[open]{display:flex;align-items:flex-end;justify-content:center;}
+.modal-backdrop::backdrop{background:rgba(4,6,11,.6);}
 .modal-sheet{
   background:var(--bg-elevated); border:1px solid var(--border); border-radius:18px 18px 0 0; max-width:var(--maxw); width:100%;
   padding:20px; max-height:86vh; overflow-y:auto; animation:sheetup .18s ease;
@@ -322,7 +323,8 @@ canvas{width:100%; display:block;}
 
 .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-soft);}
 .switch{position:relative; width:38px; height:22px; flex:0 0 auto;}
-.switch input{opacity:0; width:0; height:0;}
+.switch input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;}
+.switch input:focus-visible + .slider-el{outline:2px solid var(--cyan);outline-offset:3px;}
 .slider-el{position:absolute; inset:0; background:var(--surface-2); border:1px solid var(--border); border-radius:100px; cursor:pointer; transition:.15s;}
 .slider-el::before{content:""; position:absolute; width:16px; height:16px; left:2px; top:2px; background:var(--text-dim); border-radius:50%; transition:.15s;}
 .switch input:checked + .slider-el{background:var(--green-dim); border-color:var(--green);}
@@ -506,13 +508,29 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 
 .bp-logo-mobile{display:flex;align-items:center;gap:11px;font-size:24px;font-weight:700;letter-spacing:-.8px;margin-bottom:12px}.bp-logo-mobile img,.brand img{display:block;border-radius:7px;flex-shrink:0}
 .bp-auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:18px;font-size:25px;font-weight:700;letter-spacing:-.8px}.bp-auth-brand img{display:block;border-radius:12px;flex-shrink:0}
+/* Shared navigation and accessibility */
+.skip-link{position:fixed;top:8px;left:8px;z-index:2200;transform:translateY(calc(-100% - 12px));background:var(--surface);color:var(--text);padding:10px 14px;border-radius:8px}
+.skip-link:focus{transform:none}
+:where(button,a,input,select,summary):focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.footer-note{padding:16px 22px 20px;color:var(--text-dim)}
+.footer-note p,.footer-note nav{margin:0 0 6px}
+.footer-note nav{display:flex;flex-wrap:wrap;gap:6px 14px}
+.footer-note a{color:var(--cyan);text-decoration:underline}
+.bp-auth-panel .footer-note{padding:12px 0 0;border-top:1px solid var(--border)}
+#app > .footer-note{padding-bottom:100px}
+#app > main{padding-bottom:12px}
+.save-files{padding:24px 22px}
+.save-files h1{font-size:25px;margin-bottom:8px}
+.save-files .mode-cards{grid-template-columns:1fr}
+.save-files .mode-card{margin:0}
+#landing.choosing-save :is(.landing-hero,.feature-grid,.landing-summary,#mode-selection){display:none}
 </style>
 <script defer src="analytics-config.js"></script>
 <script defer src="analytics.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script defer src="supabase-config.js"></script>
-<script defer src="basepay-cloud.js"></script>
-<script defer src="basepay-auth.js"></script>
+<script defer src="basepay-cloud.js?v=2"></script>
+<script defer src="basepay-auth.js?v=2"></script>
 <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 96x96" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
@@ -524,26 +542,35 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 <noscript><style>body.bp-auth-locked #landing .landing-hero,body.bp-auth-locked #landing .feature-grid{visibility:visible}</style></noscript>
 </head>
 <body class="bp-auth-locked">
+<a class="skip-link" href="#landing-main" onclick="skipToMain(event)">Skip to main content</a>
 <div class="wrap">
 
 <!-- ============ LANDING ============ -->
 <div id="landing">
   <div class="landing-actions"><button class="btn ghost" onclick="openAesthetics()">Aesthetics</button><button id="bp-account-landing" class="btn ghost" onclick="openBasePayAuth()">My account</button></div>
+  <main id="landing-main" tabindex="-1" style="padding:0">
   <div class="landing-hero">
     <div class="bp-logo-mobile"><img src="/assets/basepay-icon-bw.svg" alt="" width="42" height="42"><span>BasePay</span></div>
     <h1>Learn how UK money <span class="accent">actually</span> works.<br>Practise it without real risk.</h1>
     <p class="lead">A hands-on guide to money. Make choices, see what happens, and build confidence — without risking real money.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;"><span class="badge green">Learn by doing</span><span class="badge gray">UK-focused</span><span class="badge gray">No real money</span></div>
   </div>
-  <div style="padding:0 22px 16px;color:var(--text-dim);font-size:12px;">Start with the basics, then try real-life money decisions in a safe simulation.</div>
+  <div class="landing-summary" style="padding:0 22px 16px;color:var(--text-dim);font-size:12px;">Start with the basics, then try real-life money decisions in a safe simulation.</div>
   <div class="feature-grid">
     <div class="feature-card"><div class="ico">📄</div><h4>Earn & budget</h4><p>Understand take-home pay and plan spending.</p></div>
     <div class="feature-card"><div class="ico">🏦</div><h4>Save & borrow</h4><p>Explore savings, ISAs, pensions and credit.</p></div>
     <div class="feature-card"><div class="ico">📈</div><h4>Invest & trade</h4><p>Practise long-term investing and day trading.</p></div>
     <div class="feature-card"><div class="ico">🎯</div><h4>See consequences</h4><p>Learn from decisions, not just definitions.</p></div>
   </div>
-  <div class="mode-select">
-    <h3>Choose your starting point</h3>
+  <section class="save-files hide" id="save-files">
+    <h1 id="save-files-title" tabindex="-1">Choose a save file</h1>
+    <p class="muted">Pick up where you left off or start a new simulation in an empty file. Each file saves separately to your account.</p>
+    <div id="save-files-list" class="mode-cards"></div>
+  </section>
+  <div class="mode-select" id="mode-selection">
+    <button type="button" id="back-to-save-files" class="btn ghost hide" onclick="showSaveFiles()">← Back to save files</button>
+    <h3 id="mode-title" tabindex="-1">Choose your starting point</h3>
+    <p id="mode-error" role="alert"></p>
     <details class="details-card"><summary>What will I do inside BasePay?</summary><div class="details-content">You will work through short scenarios, choose what to do, see the consequences, then try the idea in a simulator. You can explore pay, budgeting, saving, credit, investing, trading and property. Everything uses simulated money and simplified examples; it is not financial advice.</div></details>
     <div class="mode-cards">
       <button class="mode-card" onclick="startGame('youth')">
@@ -558,7 +585,15 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
       </button>
     </div>
   </div>
-  <p class="footer-note">This is an educational simulation. Figures are illustrative and simplified for teaching, not financial advice, and may not reflect the current tax year. Check GOV.UK, MoneyHelper, or a qualified adviser for current numbers and personal guidance.</p>
+  </main>
+  <footer class="footer-note">
+    <p>BasePay is an educational simulation. It is not financial advice.</p>
+    <nav aria-label="Money guidance and privacy">
+      <a href="https://www.gov.uk/">GOV.UK</a>
+      <a href="https://www.moneyhelper.org.uk/en">MoneyHelper</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </footer>
 </div>
 
 <!-- ============ APP ============ -->
@@ -569,11 +604,11 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
       <span id="bp-save-status" style="font-size:10px;color:var(--text-dim)" aria-live="polite"></span><button type="button" class="btn ghost" onclick="openAesthetics()" style="font-size:11px;padding:5px 8px">Aesthetics</button><button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()" style="font-size:11px;padding:5px 8px">Sign in</button><span class="pill day" id="pill-day">Day 1</span>
       <span class="pill cash" id="pill-cash">£0</span>
       <span class="pill xp" id="pill-xp">0 XP</span>
-      <button class="theme-toggle" id="theme-btn-app" onclick="showInterfaceTour(0)" title="How does this work?" style="position:static; width:26px; height:26px; font-size:12px;">❓</button>
+      <button class="theme-toggle" aria-label="Help and quick tour" id="theme-btn-app" onclick="showInterfaceTour(0)" title="How does this work?" style="position:static; width:26px; height:26px; font-size:12px;">❓</button>
     </div>
   </div>
 
-  <main>
+  <main id="app-main" tabindex="-1">
     <div class="tabpanel active" id="tab-home"></div>
     <div class="tabpanel" id="tab-learn"></div>
     <div class="tabpanel" id="tab-bank"></div>
@@ -584,18 +619,26 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
     <div class="tabpanel" id="tab-news"></div>
     <div class="tabpanel" id="tab-awards"></div>
   </main>
+  <footer class="footer-note">
+    <p>BasePay is an educational simulation. It is not financial advice.</p>
+    <nav aria-label="Money guidance and privacy">
+      <a href="https://www.gov.uk/">GOV.UK</a>
+      <a href="https://www.moneyhelper.org.uk/en">MoneyHelper</a>
+      <a href="privacy.html">Privacy</a>
+    </nav>
+  </footer>
 
-  <div class="tabbar">
+  <nav class="tabbar" aria-label="Main navigation">
     <div class="tabbar-inner" id="tabbar-inner"></div>
-  </div>
+  </nav>
 </div>
 
-<div id="modal-root" class="modal-backdrop hide" onclick="if(event.target===this) closeModal()">
+<div id="toast-root" role="status"></div>
+</div>
+
+<dialog id="modal-root" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this) closeModal()">
   <div class="modal-sheet" id="modal-sheet"></div>
-</div>
-<div id="toast-root"></div>
-
-</div>
+</dialog>
 <script>
 /* =====================================================================
    BASEPAY — engine
@@ -611,8 +654,8 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 /* ---------------- DATA: LESSONS ---------------- */
 const LESSONS = [
 {id:1,cat:'Earning',title:'Reading Your Payslip',gate:null,
- practiceAction:"goToBankTab()", practiceLabel:"Bank → see a real payslip breakdown",
- body:"Every payslip tells the same story: gross pay (everything you've earned) minus deductions equals net pay (what actually lands in your account). The big deductions are Income Tax and National Insurance, both taken automatically before you're paid. If you're in a workplace pension, that comes off too — before tax, which is part of why it's efficient. Learning to read this one document is the foundation for everything else: budgeting, saving, and borrowing all start from knowing what you actually have.",
+ practiceAction:"goToHome()", practiceLabel:"Home → skip to payday and check your payslip",
+ body:"Every payslip tells the same story: gross pay (everything you've earned) minus deductions equals net pay (what actually lands in your account). The big deductions are Income Tax and National Insurance, both taken automatically before you're paid. In this simulation, the pension uses relief at source. Your contribution comes out of pay after tax, and the pension provider adds government tax relief to your pension. Learning to read this one document is the foundation for everything else: budgeting, saving, and borrowing all start from knowing what you actually have.",
  quiz:{q:"Your payslip shows a 'gross pay' of £2,500. What does this mean?",options:["The amount that lands in your bank account","Your total pay before any tax or deductions come off","Your pay after tax only"],correct:1,explain:"Gross pay is before Income Tax, National Insurance, pension and anything else is deducted. What actually reaches your account is net pay, or take-home pay."}},
 {id:2,cat:'Budgeting',title:'Give Every Pound a Job',gate:null,
  practiceAction:"goToTools()", practiceLabel:"Tools → try the budget planner",
@@ -628,8 +671,8 @@ const LESSONS = [
  quiz:{q:"A credit card has an APR of 24.9%. If you only ever pay the minimum, what usually happens to the balance?",options:["It clears quickly","It can shrink very slowly, or even grow, because interest keeps compounding","Interest doesn't apply to unpaid balances"],correct:1,explain:"Minimum payments are often barely above the interest charged that month, so the balance clears slowly — or not at all — while interest keeps compounding."}},
 {id:5,cat:'Financial Admin',title:'Credit Scores Explained',gate:'apply_credit',
  practiceAction:"goToCreditTab()", practiceLabel:"Credit → check your credit score",
- body:"A credit score estimates how reliably you're likely to repay borrowed money. It's built from payment history, how much of your available credit you use (utilisation), how long you've held accounts, and how many times you've recently applied for credit. Here's the myth worth busting: a lower score at the very start usually means a short history — not bad behaviour. Lenders simply have less to go on. The good news is that a short history is the easiest kind of low score to fix, just by paying on time.",
- quiz:{q:"Your credit score starts at 640 in this game. Why?",options:["Because you've done something wrong","Because you have a short credit history, which is completely normal starting out","Because you already have too much debt"],correct:1,explain:"A new profile has a short history, not a bad one. Scores rise naturally with on-time payments and low utilisation over time."}},
+ body:"A credit score estimates how reliably you're likely to repay borrowed money. In BasePay, your simulated credit score unlocks at 18. It's built from payment history, how much of your available credit you use (utilisation), how long you've held accounts, and how many times you've recently applied for credit. Here's the myth worth busting: a lower score at the very start usually means a short history — not bad behaviour. Lenders simply have less to go on. The good news is that a short history is the easiest kind of low score to fix, just by paying on time.",
+ quiz:{q:"In BasePay your simulated credit score unlocks at 18 and starts at 640. Why?",options:["Because you've done something wrong","Because you have a short credit history, which is completely normal starting out","Because you already have too much debt"],correct:1,explain:"A new profile has a short history, not a bad one. Scores rise naturally with on-time payments and low utilisation over time."}},
 {id:6,cat:'Debt',title:'The Truth About BNPL',gate:null,
  practiceAction:"goToCreditTab()", practiceLabel:"Credit → see how BNPL is listed",
  body:"Buy Now Pay Later splits a purchase into instalments, often with no interest — which makes it feel free. It isn't quite: it's still a form of credit, and missing an instalment can trigger fees and a hit to your credit score, just like missing a card payment. Because it's frictionless (a checkbox, not an application), it also makes overspending easier than it looks, since several small BNPL plans can quietly add up to a real monthly commitment.",
@@ -1076,6 +1119,7 @@ const SECTOR_NEWS = {
 /* ---------------- STATE ---------------- */
 const ADULT_MONTHLY_GROSS = 2800;
 const YOUTH_MONTHLY_INCOME = 160;
+const PLAN_2_ANNUAL_THRESHOLD = 29385;
 let state = null;
 
 function defaultState(mode){
@@ -1124,7 +1168,7 @@ function computePAYE(annualGross, hasStudentLoan){
  if(annualGross>PA) ni += (Math.min(annualGross,BASIC)-PA)*0.08;
  if(annualGross>BASIC) ni += (annualGross-BASIC)*0.02;
  let sl=0;
- if(hasStudentLoan && annualGross>27295) sl=(annualGross-27295)*0.09;
+ if(hasStudentLoan) sl=Math.max(0, annualGross-PLAN_2_ANNUAL_THRESHOLD)*0.09;
  return {incomeTax:tax, ni:ni, studentLoan:sl};
 }
 function creditTierFor(score){
@@ -1193,7 +1237,7 @@ function computeFinancialHealthScore(){
  const debtScore = Math.max(0, 20 - dti*40);
  const hasHabit = (state.savings.balance>0 || totalLiquid()>0 || totalInvestmentsValue()>0 || state.isa.lifetime.balance>0) ? 20 : 0;
  const divScore = Math.min(15, distinctHoldingClasses()*3.75);
- const creditProxy = Math.min(15, (state.credit.score/999)*15);
+ const creditProxy = state.mode==='adult' ? Math.min(15, (state.credit.score/999)*15) : 0;
  return Math.max(0, Math.min(100, Math.round(efScore+debtScore+hasHabit+divScore+creditProxy)));
 }
 
@@ -1266,7 +1310,7 @@ function payday(){
  if(state.mode==='adult'){
   const annual = gross*12;
   const p = computePAYE(annual, state.studentLoan);
-  incomeTax = p.incomeTax/12; ni = p.ni/12; sl = p.studentLoan/12;
+  incomeTax = p.incomeTax/12; ni = p.ni/12; sl = Math.round(p.studentLoan/12*100)/100;
   pensionEmployee = gross * (state.pension.employeePct/100);
   pensionEmployer = gross * 0.03;
   pensionRelief = pensionEmployee * 0.25;
@@ -1274,7 +1318,7 @@ function payday(){
  }
  const bankFee = state.mode==='adult' ? bankOf().fee : 0;
  let netPay = gross - incomeTax - ni - sl - pensionEmployee - bankFee;
- state.lastPayslip = {gross, incomeTax, ni, sl, pensionEmployee, pensionEmployer, pensionRelief, bankFee, netPay, day:state.day};
+ state.lastPayslip = {gross, incomeTax, ni, sl, pensionEmployee, pensionEmployeePct:state.mode==='adult'?state.pension.employeePct:0, pensionEmployer, pensionRelief, bankFee, netPay, day:state.day};
 
  if(state.budget){
   const growthAmt = netPay * (state.budget.growth/100);
@@ -1656,15 +1700,19 @@ function answerQuiz(lessonId, idx){
  const l = LESSONS.find(x=>x.id===lessonId);
  trackAnalytics('quiz_answered', {lesson_id:lessonId, correct:idx===l.quiz.correct});
  const opts = document.querySelectorAll('#quiz-area .quiz-opt');
+ const area = document.getElementById('quiz-area');
  opts.forEach((el,i)=>{
-  el.style.pointerEvents='none';
+  el.disabled = true;
   if(i===l.quiz.correct) el.classList.add('correct');
   else if(i===idx) el.classList.add('wrong');
  });
  setTimeout(()=>{
-  const area = document.getElementById('quiz-area');
+  if(!area.isConnected || !document.getElementById('modal-root').open) return;
   if(idx===l.quiz.correct){
-   const tryItRow = l.practiceAction ? `<div class="lock-row" style="border-style:solid; margin-top:10px; align-items:flex-start;">
+   const youthLock = state.mode==='youth' && ['goToCreditTab()', 'goToPropertyTab()', 'goToBankPension()'].includes(l.practiceAction);
+   const tryItRow = youthLock
+    ? '<p class="lock-row">The simulator activity for this lesson unlocks at 18.</p>'
+    : l.practiceAction ? `<div class="lock-row" style="border-style:solid; margin-top:10px; align-items:flex-start;">
      <span style="font-size:15px;">👉</span>
      <span><b>Try it now:</b> head to <b>${l.practiceLabel}</b> — that's where this lesson actually happens in the app.
       <button class="btn primary block" style="margin-top:8px;" onclick="${l.practiceAction}">${l.practiceLabel}</button>
@@ -1681,6 +1729,8 @@ function answerQuiz(lessonId, idx){
   } else {
    area.insertAdjacentHTML('beforeend', `<p class="neg" style="font-size:12px; margin-top:10px;">Not quite — try again below.</p><button class="btn block" style="margin-top:10px;" onclick="openLesson(${lessonId})">Try again</button>`);
   }
+  area.querySelector('p:last-of-type')?.setAttribute('role','status');
+  area.querySelector('button:last-child')?.focus();
  },350);
 }
 function checkFreePlay(){
@@ -1699,6 +1749,7 @@ function turn18(){
  state.mode='adult';
  state.isaYearContributed = 0; // fresh adult allowance tracking
  state.credit.score = 640;
+ buildTabBar();
  addNews('sector', "Turn 18: your Junior ISA has automatically become a Stocks & Shares ISA — that's what happens in real life too.");
  saveState(); renderAll();
  toast('Happy 18th! Your Junior ISA is now a Stocks & Shares ISA, and every Adult Mode feature is unlocked.','ach');
@@ -1730,8 +1781,36 @@ function toast(msg, kind){
  root.appendChild(el);
  setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 3800);
 }
-function openModal(html){ document.getElementById('modal-sheet').innerHTML = html; document.getElementById('modal-root').classList.remove('hide'); }
-function closeModal(){ document.getElementById('modal-root').classList.add('hide'); }
+let modalLessonTrigger = null;
+function openModal(html){
+ const dialog = document.getElementById('modal-root');
+ const sheet = document.getElementById('modal-sheet');
+ if(!dialog.open) modalLessonTrigger = document.activeElement.dataset.lesson || null;
+ sheet.innerHTML = html;
+ const heading = sheet.querySelector('h3');
+ heading.id = 'modal-title';
+ heading.tabIndex = -1;
+ sheet.querySelector('.modal-close')?.setAttribute('aria-label','Close dialog');
+ if(!dialog.open) dialog.showModal();
+ sheet.scrollTop = 0;
+ heading.focus();
+}
+function closeModal(){
+ document.getElementById('modal-root').close();
+}
+document.getElementById('modal-root').addEventListener('close', ()=>{
+ if(modalLessonTrigger && !document.getElementById('modal-root').open){
+  document.querySelector(`[data-lesson="${modalLessonTrigger}"]`)?.focus();
+ }
+ modalLessonTrigger = null;
+});
+function skipToMain(event){
+ event.preventDefault();
+ const auth = document.getElementById('bp-auth-root');
+ const id = auth && !auth.classList.contains('hide') ? 'bp-auth-title'
+  : document.getElementById('app').classList.contains('hide') ? 'landing-main' : 'app-main';
+ document.getElementById(id).focus();
+}
 
 /* ---------------- FORMAT HELPERS ---------------- */
 function fmt(n){ n=Number(n)||0; return '£'+n.toLocaleString('en-GB',{maximumFractionDigits:0}); }
@@ -1778,16 +1857,22 @@ const TABS = [
 let currentTab='home';
 function buildTabBar(){
  const el = document.getElementById('tabbar-inner');
- el.innerHTML = TABS.map(t=>`<button class="tabbtn${t.id==='home'?' active':''}" data-tab="${t.id}" onclick="switchTab('${t.id}')"><span class="ic">${t.ic}</span>${t.label}</button>`).join('');
+ el.innerHTML = TABS.filter(t=>state.mode==='adult' || !['property','credit'].includes(t.id))
+  .map(t=>`<button type="button" class="tabbtn${t.id===currentTab?' active':''}" ${t.id===currentTab?'aria-current="page"':''} data-tab="${t.id}" onclick="switchTab('${t.id}')"><span class="ic" aria-hidden="true">${t.ic}</span>${t.label}</button>`).join('');
 }
 function switchTab(id){
  if(currentTab!==id) trackAnalytics('section_viewed', {section:id});
  currentTab=id;
  document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
  document.getElementById('tab-'+id).classList.add('active');
- document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
+ document.querySelectorAll('.tabbtn').forEach(b=>{
+  const active = b.dataset.tab===id;
+  b.classList.toggle('active', active);
+  if(active) b.setAttribute('aria-current','page');
+  else b.removeAttribute('aria-current');
+ });
  renderTab(id);
- document.querySelector('main').scrollTo(0,0);
+ document.getElementById('app-main').scrollTo(0,0);
 }
 function renderAll(){
  document.getElementById('pill-day').textContent = 'Day '+state.day;
@@ -2026,14 +2111,14 @@ function renderHome(){
  el.innerHTML = `
   ${renderTabIntro('home')}
   ${renderGuideCard()}
-  ${state.freePlay?`<div class="card tight" style="border-color:var(--amber-dim); background:var(--amber-dim);"><span class="badge amber">✨ Free Play unlocked</span> <span class="faint">Every product is open — use your in-game cash however you like.</span></div>`:''}
+  ${state.freePlay?`<div class="card tight" style="border-color:var(--amber-dim); background:var(--amber-dim);"><span class="badge amber">✨ Free Play unlocked</span> <span class="faint">${state.mode==='youth'?'Use your Junior ISA cash to practise investing. Adult products unlock at 18.':'Use your in-game cash to explore the adult simulation.'}</span></div>`:''}
   <div class="card">
    <div class="faint" style="text-transform:uppercase; letter-spacing:1px;">Your goal</div>
-   <p style="font-size:12.5px; margin-top:4px;">Build healthier money habits as you play. Your scores update with your decisions.</p>
-   <details class="details-card"><summary>What do these scores mean?</summary><div class="details-content">The Financial Health Score is a simplified game indicator based on savings, debt, investing diversity and credit. The credit score is also simulated and is not a real UK lender score. Use both as learning feedback, not as a promise of how a real lender will judge you.</div></details>
+   <p style="font-size:12.5px; margin-top:4px;">Build healthier money habits as you play. Your Financial Health Score updates with your decisions.</p>
+   <details class="details-card"><summary>What do these scores mean?</summary><div class="details-content">The Financial Health Score reflects your simulated savings, debt and investment mix. ${state.mode==='youth'?'Your simulated credit score unlocks at 18 and then counts towards your Financial Health Score.':'Your simulated credit score also counts towards Financial Health. Use it to learn how credit works. UK lenders use their own criteria.'}</div></details>
    <div style="display:flex; justify-content:space-around; align-items:center; margin-top:6px;">
     ${svgGauge(fhs,100,'#3ddc97',104,'Financial Health')}
-    ${state.credit.score===null ? `<div class="gauge-wrap"><div style="width:104px; height:104px; border-radius:50%; border:9px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--text-faint); text-align:center; padding:8px;">No score yet</div><div class="gauge-sub">Starts at 18</div></div>` : svgGauge(state.credit.score,999,'#3ad4ec',104, tier.label + (flavor?(' · '+flavor):''))}
+    ${state.mode==='youth' ? `<div class="gauge-wrap"><div style="width:104px; height:104px; border-radius:50%; border:9px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--text-faint); text-align:center; padding:8px;">Unlocks at 18</div><div class="gauge-sub">Credit score</div></div>` : svgGauge(state.credit.score,999,'#3ad4ec',104, tier.label + (flavor?(' · '+flavor):''))}
    </div>
   </div>
 
@@ -2049,7 +2134,7 @@ function renderHome(){
    <div class="card-row"><span class="muted">Total debt</span><span class="neg">-${fmt(totalDebt())}</span></div>
   </div></details>
 
-  ${state.mode==='adult' && state.lastPayslip ? renderPayslipCard() : ''}
+  ${state.mode==='adult' && state.lastPayslip?.gross === ADULT_MONTHLY_GROSS ? renderPayslipCard() : ''}
 
   <div class="section-title"><h2>Time</h2></div>
   <div class="card">
@@ -2066,11 +2151,15 @@ function renderHome(){
   <div class="card">
    <p class="faint">When you're ready, turning 18 converts your Junior ISA into an adult Stocks &amp; Shares ISA and unlocks the full game.</p>
    <button class="btn primary block" onclick="confirmTurn18()">🎂 Turn 18</button>
-  </div>` : `
+  </div>` : ''}
   <div class="section-title"><h2>Settings</h2></div>
   <div class="card">
-   <div class="toggle-row"><span>I have a Plan 2 student loan</span><label class="switch"><input type="checkbox" ${state.studentLoan?'checked':''} onchange="toggleStudentLoan()"><span class="slider-el"></span></label></div>
-  </div>`}
+   ${state.mode==='adult'? `<div class="toggle-row"><span id="plan-2-label">I have a Plan 2 student loan</span><label class="switch"><input type="checkbox" aria-labelledby="plan-2-label" aria-describedby="plan-2-help" ${state.studentLoan?'checked':''} onchange="toggleStudentLoan()"><span class="slider-el"></span></label></div>
+   <p id="plan-2-help" class="faint">Applies from your next payday. The April 2026 threshold is ${fmt(PLAN_2_ANNUAL_THRESHOLD)} a year. BasePay shows the estimate to the penny. UK payroll rounds down to whole pounds.</p>` : ''}
+   ${window.BasePayCloud?.userId()
+     ? '<button type="button" class="btn" onclick="showSaveFiles()">Switch save file</button>'
+     : '<button type="button" class="btn" onclick="confirmResetGuestProgress()">Reset guest progress</button>'}
+  </div>
  `;
  drawLineChart(document.getElementById('nw-chart'), state.netWorthHistory.map(p=>p.value), '#3ddc97');
 }
@@ -2081,14 +2170,35 @@ function renderPayslipCard(){
   <div class="payslip-row"><span>Gross pay</span><span>${fmt2(p.gross)}</span></div>
   <div class="payslip-row deduction"><span>Income Tax</span><span>-${fmt2(p.incomeTax)}</span></div>
   <div class="payslip-row deduction"><span>National Insurance (8%/2%)</span><span>-${fmt2(p.ni)}</span></div>
-  ${p.sl>0?`<div class="payslip-row deduction"><span>Student loan</span><span>-${fmt2(p.sl)}</span></div>`:''}
-  <div class="payslip-row deduction"><span>Pension contribution (${state.pension.employeePct}%)</span><span>-${fmt2(p.pensionEmployee)}</span></div>
+  ${p.sl>0?`<div class="payslip-row deduction"><span>Plan 2 student loan (estimate)</span><span>-${fmt2(p.sl)}</span></div>`:''}
+  <div class="payslip-row deduction"><span>Employee pension contribution (${p.pensionEmployeePct ?? Math.round(p.pensionEmployee/p.gross*100)}%)</span><span>-${fmt2(p.pensionEmployee)}</span></div>
   ${p.bankFee>0?`<div class="payslip-row deduction"><span>Bank fee</span><span>-${fmt2(p.bankFee)}</span></div>`:''}
   <div class="payslip-row total"><span>Net (take-home) pay</span><span>${fmt2(p.netPay)}</span></div>
-  <div class="faint" style="margin-top:8px;">Employer match +${fmt2(p.pensionEmployer)} and tax relief +${fmt2(p.pensionRelief)} were also added to your pension — free money, twice.</div>
+  <div class="faint" style="margin-top:8px;">This pension uses <b>relief at source</b>. Your contribution (5% of gross pay by default) comes out of your pay after tax. The pension provider adds 25% of your contribution as government tax relief (+${fmt2(p.pensionRelief)}). Your employer adds +${fmt2(p.pensionEmployer)} separately.</div>
  </div>`;
 }
-function toggleStudentLoan(){ state.studentLoan=!state.studentLoan; saveState(); renderAll(); }
+function toggleStudentLoan(){
+ state.studentLoan=!state.studentLoan;
+ saveState();
+}
+function confirmResetGuestProgress(){
+ openModal(`<button type="button" class="modal-close" onclick="closeModal()">✕</button>
+  <h3>Reset guest progress?</h3>
+  <p>This clears your guest progress in this browser and takes you back to mode selection. Your colour theme is kept.</p>
+  <p id="guest-reset-status" role="status"></p>
+  <div class="btn-row">
+   <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+   <button type="button" class="btn danger" onclick="resetGuestProgress()">Reset guest progress</button>
+  </div>`);
+}
+function resetGuestProgress(){
+ try {
+  window.BasePayCloud.resetGuest();
+  location.reload();
+ } catch (_) {
+  document.getElementById('guest-reset-status').textContent = 'Could not reset progress. Check that browser storage is available and try again.';
+ }
+}
 function confirmTurn18(){
  openModal(`<button class="modal-close" onclick="closeModal()">✕</button>
  <h3>Turn 18?</h3>
@@ -2116,13 +2226,13 @@ function renderLearn(){
   body.innerHTML = `<div class="progress-bar purple" style="margin-bottom:12px;"><div style="width:${state.lessonsCompleted.length/LESSONS.length*100}%"></div></div>` +
    LESSONS.map(l=>{
     const done = state.lessonsCompleted.includes(l.id);
-    return `<div class="lesson-item ${done?'done':''}" onclick="openLesson(${l.id})">
-     <div class="lesson-num">${done?'✓':l.id}</div>
-     <div class="lesson-body"><h4>${l.title}</h4><div class="cat">${l.cat}${l.gate?' · unlocks a feature':''}</div></div>
-    </div>`;
+    return `<button type="button" class="lesson-item ${done?'done':''}" data-lesson="${l.id}" aria-haspopup="dialog" onclick="openLesson(${l.id})">
+     <span class="lesson-num" aria-hidden="true">${done?'✓':l.id}</span>
+     <span class="lesson-body"><span class="lesson-title">${l.title}</span><span class="cat">${l.cat}${l.gate?' · unlocks a feature':''}${done?' · Completed':''}</span></span>
+    </button>`;
    }).join('');
  } else if(learnSub==='glossary'){
-  body.innerHTML = `<input type="text" placeholder="Search the glossary…" oninput="filterGlossary(this.value)" style="margin-bottom:10px;">
+  body.innerHTML = `<input type="text" aria-label="Search the glossary" placeholder="Search the glossary…" oninput="filterGlossary(this.value)" style="margin-bottom:10px;">
    <div id="glossary-list"></div>`;
   filterGlossary('');
  } else if(learnSub==='scenarios'){
@@ -2184,7 +2294,7 @@ function renderBank(){
    <button class="subtab ${bankSub==='account'?'active':''}" onclick="setBankSub('account')">Account</button>
    <button class="subtab ${bankSub==='savings'?'active':''}" onclick="setBankSub('savings')">Savings</button>
    <button class="subtab ${bankSub==='isas'?'active':''}" onclick="setBankSub('isas')">ISAs</button>
-   <button class="subtab ${bankSub==='pension'?'active':''}" onclick="setBankSub('pension')">Pension</button>
+   <button class="subtab ${bankSub==='pension'?'active':''}" onclick="setBankSub('pension')">Pension${state.mode==='youth'?' · Unlocks at 18':''}</button>
   </div>
   <div id="bank-body"></div>`;
  const body = document.getElementById('bank-body');
@@ -2329,12 +2439,12 @@ function renderBankPension(){
   <div class="section-title"><h2>Workplace pension</h2></div>
   <div class="card">
    <div class="big-num amber-t">${fmt2(state.pension.balance)}</div>
-   ${state.mode==='youth'? `<p class="faint" style="margin-top:8px;">Pensions unlock in Adult Mode — under-18s aren't in a workplace pension yet.</p>` : `
+   ${state.mode==='youth'? `<p class="faint" style="margin-top:8px;">The workplace pension simulation unlocks at 18.</p>` : `
    <div class="field" style="margin-top:10px;"><label>Your contribution: ${state.pension.employeePct}%</label>
     <input type="range" min="0" max="15" value="${state.pension.employeePct}" oninput="setPensionPct(this.value)"></div>
    <div class="card-row"><span class="muted">Employer match (fixed)</span><span class="pos">3%</span></div>
    <div class="card-row"><span class="muted">Government tax relief</span><span class="pos">+25% of your contribution</span></div>
-   <p class="faint" style="margin-top:8px;">Put in £80 of your own pay and it's common to see £100+ actually land — free money, twice, before any investment growth.</p>
+   <p class="faint" style="margin-top:8px;">BasePay uses relief at source. If you pay £80 from your after-tax pay, the provider adds £20 in tax relief. That makes £100 before the employer contribution.</p>
    <div class="inline-field" style="margin-top:10px;">
     <div class="field"><label>Lump-sum top-up from cash</label><input type="number" id="pension-topup" placeholder="e.g. 100"></div>
     <button class="btn primary" onclick="pensionTopUp(document.getElementById('pension-topup').value)">Top up (+25%)</button>
@@ -2558,7 +2668,7 @@ function confirmSellProperty(id){
 /* ---------------- CREDIT TAB ---------------- */
 function renderCredit(){
  const el = document.getElementById('tab-credit');
- if(state.mode==='youth'){ el.innerHTML = renderTabIntro('credit') + `<div class="lock-row">🔒 Credit products unlock at 18 in Adult Mode — under-18s can't legally access these either.</div>` + renderGuideCard(); return; }
+ if(state.mode==='youth'){ el.innerHTML = renderTabIntro('credit') + `<div class="lock-row">🔒 Credit score and borrowing unlock at 18.</div>` + renderGuideCard(); return; }
  const tier = creditTierFor(state.credit.score);
  const flavor = flavorTier(state.credit.score);
  const gateOK = creditGateOK();
@@ -2574,7 +2684,7 @@ function renderCredit(){
    <div class="card-row"><span class="muted">Utilisation</span><span>${state.credit.card? ((state.credit.card.balance/state.credit.card.limit*100).toFixed(0)+'% of limit') : 'No card yet'}</span></div>
    <div class="card-row"><span class="muted">Account age</span><span>${state.credit.firstProductDay? Math.max(0,state.day-state.credit.firstProductDay)+' days':'No credit product yet'}</span></div>
    <div class="card-row"><span class="muted">Recent applications</span><span>${state.applications.filter(d=>state.day-d<=30).length} in last 30 days</span></div>
-   <div class="toggle-row"><span>Registered on the electoral roll</span><label class="switch"><input type="checkbox" ${state.electoralRoll?'checked':''} onchange="toggleElectoralRoll()"><span class="slider-el"></span></label></div>
+   <div class="toggle-row"><span id="electoral-roll-label">Registered on the electoral roll</span><label class="switch"><input type="checkbox" aria-labelledby="electoral-roll-label" ${state.electoralRoll?'checked':''} onchange="toggleElectoralRoll()"><span class="slider-el"></span></label></div>
    <p class="faint" style="margin-top:6px;">Lenders check the electoral roll to help verify who you are — being registered gives a small, permanent boost.</p>
   </div>
   ${!gateOK? `<div class="lock-row">🔒 Applying for credit unlocks after 'How Interest Really Works' and 'Credit Scores Explained' in Learn</div>` : ''}
@@ -2586,11 +2696,11 @@ function renderCredit(){
     <div class="card-row"><span class="muted">Limit</span><span>${fmt(state.credit.card.limit)}</span></div>
     <div class="card-row"><span class="muted">APR</span><span>${state.credit.card.apr}%</span></div>
     <div class="inline-field" style="margin-top:8px;">
-     <div class="field"><label>Spend</label><input type="number" id="card-spend"></div>
+     <div class="field"><label for="card-spend">Spend</label><input type="number" id="card-spend"></div>
      <button class="btn" onclick="spendOnCard(document.getElementById('card-spend').value)">Spend</button>
     </div>
     <div class="inline-field" style="margin-top:8px;">
-     <div class="field"><label>Pay off</label><input type="number" id="card-pay"></div>
+     <div class="field"><label for="card-pay">Pay off</label><input type="number" id="card-pay"></div>
      <button class="btn primary" onclick="payCardBalance(document.getElementById('card-pay').value)">Pay</button>
     </div>` : `<button class="btn primary block" ${gateOK?'':'disabled'} onclick="applyCreditCard()">Apply for a ${tier.label}-tier card</button>`}
   </div>
@@ -2601,18 +2711,18 @@ function renderCredit(){
     <div class="card-row"><span class="muted">Balance</span><span class="neg">${fmt2(state.credit.loan.balance)}</span></div>
     <div class="card-row"><span class="muted">Monthly payment</span><span>${fmt2(state.credit.loan.monthlyPayment)}</span></div>
     <div class="card-row"><span class="muted">Months remaining</span><span>${state.credit.loan.remainingMonths}</span></div>
-    <div class="inline-field" style="margin-top:8px;"><div class="field"><label>Extra payment</label><input type="number" id="loan-extra"></div><button class="btn primary" onclick="payLoanExtra(document.getElementById('loan-extra').value)">Pay extra</button></div>
+    <div class="inline-field" style="margin-top:8px;"><div class="field"><label for="loan-extra">Extra payment</label><input type="number" id="loan-extra"></div><button class="btn primary" onclick="payLoanExtra(document.getElementById('loan-extra').value)">Pay extra</button></div>
    ` : `
     <div class="inline-field">
-     <div class="field"><label>Amount</label><input type="number" id="loan-amt" value="1000"></div>
-     <div class="field"><label>Term (months)</label><input type="number" id="loan-term" value="24"></div>
+     <div class="field"><label for="loan-amt">Amount</label><input type="number" id="loan-amt" value="1000"></div>
+     <div class="field"><label for="loan-term">Term (months)</label><input type="number" id="loan-term" value="24"></div>
     </div>
     <button class="btn primary block" ${gateOK?'':'disabled'} onclick="applyLoan(document.getElementById('loan-amt').value, Number(document.getElementById('loan-term').value))">Apply at ${tier.loanApr}% APR</button>`}
   </div>
 
   <div class="section-title"><h2>Buy Now Pay Later</h2></div>
   <div class="card">
-   <div class="inline-field"><div class="field"><label>Purchase amount</label><input type="number" id="bnpl-amt" value="60"></div><button class="btn primary" ${gateOK?'':'disabled'} onclick="makeBNPLPurchase(document.getElementById('bnpl-amt').value)">Split into 3</button></div>
+   <div class="inline-field"><div class="field"><label for="bnpl-amt">Purchase amount</label><input type="number" id="bnpl-amt" value="60"></div><button class="btn primary" ${gateOK?'':'disabled'} onclick="makeBNPLPurchase(document.getElementById('bnpl-amt').value)">Split into 3</button></div>
    ${state.credit.bnpl.map(p=>`<div class="card-row" style="margin-top:8px;"><span class="muted">Plan ${fmt(p.total)}</span><span>${fmt2(p.remaining)} left, next due day ${p.dueDay}</span></div>`).join('')}
   </div>
 
@@ -2657,10 +2767,10 @@ function renderBudgetTool(){
  const b = state.budget || {bills:50, fun:20, growth:30};
  return `<div class="card">
   <p class="faint">Give every pound a job. These percentages apply to your net pay from next payday.</p>
-  <div class="field"><label>Bills %</label><input type="number" id="bud-bills" value="${b.bills}" oninput="previewBudget()"></div>
-  <div class="field"><label>Fun %</label><input type="number" id="bud-fun" value="${b.fun}" oninput="previewBudget()"></div>
-  <div class="field"><label>Growth (savings) %</label><input type="number" id="bud-growth" value="${b.growth}" oninput="previewBudget()"></div>
-  <div id="budget-remaining" class="faint" style="margin-bottom:10px;"></div>
+  <div class="field"><label for="bud-bills">Bills %</label><input type="number" id="bud-bills" value="${b.bills}" oninput="previewBudget()"></div>
+  <div class="field"><label for="bud-fun">Fun %</label><input type="number" id="bud-fun" value="${b.fun}" oninput="previewBudget()"></div>
+  <div class="field"><label for="bud-growth">Growth (savings) %</label><input type="number" id="bud-growth" value="${b.growth}" oninput="previewBudget()"></div>
+  <div id="budget-remaining" role="status" class="faint" style="margin-bottom:10px;"></div>
   <button class="btn primary block" onclick="setBudget(document.getElementById('bud-bills').value,document.getElementById('bud-fun').value,document.getElementById('bud-growth').value)">Save budget</button>
  </div>`;
 }
@@ -2686,12 +2796,12 @@ function renderISATrackerTool(){
 }
 function renderGrowthTool(){
  return `<div class="card">
-  <div class="field"><label>Starting principal (£)</label><input type="number" id="gc-principal" value="1000"></div>
-  <div class="field"><label>Monthly contribution (£)</label><input type="number" id="gc-monthly" value="100"></div>
-  <div class="field"><label>Annual growth rate (%)</label><input type="number" id="gc-rate" value="6"></div>
-  <div class="field"><label>Years</label><input type="number" id="gc-years" value="10"></div>
+  <div class="field"><label for="gc-principal">Starting principal (£)</label><input type="number" id="gc-principal" value="1000"></div>
+  <div class="field"><label for="gc-monthly">Monthly contribution (£)</label><input type="number" id="gc-monthly" value="100"></div>
+  <div class="field"><label for="gc-rate">Annual growth rate (%)</label><input type="number" id="gc-rate" value="6"></div>
+  <div class="field"><label for="gc-years">Years</label><input type="number" id="gc-years" value="10"></div>
   <button class="btn primary block" onclick="runGrowthCalc()">Calculate</button>
-  <div id="gc-result" style="margin-top:12px;"></div>
+  <div id="gc-result" role="status" style="margin-top:12px;"></div>
   <canvas id="gc-chart" height="90" style="margin-top:10px;"></canvas>
  </div>`;
 }
@@ -2712,12 +2822,12 @@ function runGrowthCalc(){
 }
 function renderMortgageTool(){
  return `<div class="card">
-  <div class="field"><label>Property price (£)</label><input type="number" id="mc-price" value="220000"></div>
-  <div class="field"><label>Deposit (%)</label><input type="number" id="mc-deposit" value="15"></div>
-  <div class="field"><label>Interest rate (% APR)</label><input type="number" id="mc-rate" value="5.1"></div>
-  <div class="field"><label>Term (years)</label><input type="number" id="mc-term" value="25"></div>
+  <div class="field"><label for="mc-price">Property price (£)</label><input type="number" id="mc-price" value="220000"></div>
+  <div class="field"><label for="mc-deposit">Deposit (%)</label><input type="number" id="mc-deposit" value="15"></div>
+  <div class="field"><label for="mc-rate">Interest rate (% APR)</label><input type="number" id="mc-rate" value="5.1"></div>
+  <div class="field"><label for="mc-term">Term (years)</label><input type="number" id="mc-term" value="25"></div>
   <button class="btn primary block" onclick="runMortgageCalc()">Calculate</button>
-  <div id="mc-result" style="margin-top:12px;"></div>
+  <div id="mc-result" role="status" style="margin-top:12px;"></div>
  </div>`;
 }
 function runMortgageCalc(){
@@ -2737,13 +2847,14 @@ function runMortgageCalc(){
 }
 function renderPayoffTool(){
  return `<div class="card">
-  <div class="field"><label>Current balance (£)</label><input type="number" id="pc-balance" value="1500"></div>
-  <div class="field"><label>APR (%)</label><input type="number" id="pc-apr" value="24.9"></div>
-  <div class="field"><label>Minimum payment rule (% of balance, min £)</label>
-   <div class="inline-field"><input type="number" id="pc-minpct" value="3"><input type="number" id="pc-minfloor" value="25"></div>
+  <div class="field"><label for="pc-balance">Current balance (£)</label><input type="number" id="pc-balance" value="1500"></div>
+  <div class="field"><label for="pc-apr">APR (%)</label><input type="number" id="pc-apr" value="24.9"></div>
+  <div class="inline-field">
+   <div class="field"><label for="pc-minpct">Minimum payment (% of balance)</label><input type="number" id="pc-minpct" value="3"></div>
+   <div class="field"><label for="pc-minfloor">Minimum payment floor (£)</label><input type="number" id="pc-minfloor" value="25"></div>
   </div>
   <button class="btn primary block" onclick="runPayoffCalc()">Calculate</button>
-  <div id="pc-result" style="margin-top:12px;"></div>
+  <div id="pc-result" role="status" style="margin-top:12px;"></div>
  </div>`;
 }
 function runPayoffCalc(){
@@ -2860,10 +2971,32 @@ function renderLandingTicker(){
 function trackAnalytics(event, properties){
  try { window.basepayTrack?.(event, properties); } catch (_) {}
 }
-function startGame(mode){
+let creatingSave = false;
+async function prepareNewSave(save){
+ if(creatingSave) return false;
+ if(!window.BasePayCloud?.userId()) return true;
+ creatingSave = true;
+ const controls = document.querySelectorAll('#mode-selection button');
+ const status = document.getElementById('mode-error');
+ controls.forEach(button=>{ button.disabled = true; });
+ status.textContent = 'Creating save file…';
+ try {
+  await window.BasePayCloud.createFile(save);
+  return true;
+ } catch(error) {
+  status.textContent = error.message || 'Could not create the save file. Please try again.';
+  return false;
+ } finally {
+  creatingSave = false;
+  controls.forEach(button=>{ button.disabled = false; });
+ }
+}
+async function startGame(mode){
+ const save = defaultState(mode);
+ if(!await prepareNewSave(save)) return;
  trackAnalytics('simulator_started');
- state = defaultState(mode);
- saveState();
+ state = save;
+ if(!window.BasePayCloud.userId()) saveState();
  document.getElementById('landing').classList.add('hide');
  document.getElementById('app').classList.remove('hide');
  buildTabBar();
@@ -2910,22 +3043,48 @@ function resumeGame(saved){
  switchTab('home');
  renderAll();
 }
-/* Called only after the authenticated user's cloud save has loaded.
-   A previous anonymous browser save is never imported without consent. */
-function basepayLoadAccountSave(saved){
- closeModal();
- document.getElementById('app').classList.add('hide');
- document.getElementById('landing').classList.remove('hide');
- state = null;
- if(saved && saved.day){
-   resumeGame(saved);
-   return;
+let showingSaveFiles = false;
+function basepayLoadAccountFiles(slots){
+ basepayClearForSignOut();
+ const landing = document.getElementById('landing');
+ landing.classList.add('choosing-save');
+ document.getElementById('save-files').classList.remove('hide');
+ document.getElementById('save-files-list').innerHTML = slots.map((save, index)=>`
+  <button type="button" class="mode-card" onclick="openSaveFile(${index})">
+   <span class="badge ${save?'green':'gray'}">Save file ${index+1}</span>
+   <h4>${save?'Continue simulation':'Start new simulation'}</h4>
+   <p>${save?`${save.mode==='adult'?'Adult':'Youth'} Mode · Day ${Number(save.day)} · ${save.lessonsCompleted?.length ?? 0} lessons completed`:'Empty file. Choose Youth or Adult Mode.'}</p>
+  </button>`).join('');
+ document.getElementById('save-files-title').focus();
+}
+async function showSaveFiles(){
+ if(showingSaveFiles) return;
+ showingSaveFiles = true;
+ try {
+  basepayLoadAccountFiles(await window.BasePayCloud.listFiles());
+ } catch(error) {
+  toast(error.message,'warn');
+ } finally {
+  showingSaveFiles = false;
  }
- const previous = loadLegacyState();
+}
+function openSaveFile(index){
+ const save = window.BasePayCloud.selectFile(index);
+ if(save){
+  resumeGame(save);
+  document.getElementById('app-main').focus();
+  return;
+ }
+ document.getElementById('landing').classList.remove('choosing-save');
+ document.getElementById('save-files').classList.add('hide');
+ document.getElementById('back-to-save-files').classList.remove('hide');
+ document.getElementById('mode-error').textContent = '';
+ document.getElementById('mode-title').focus();
+ const previous = index===0 ? loadLegacyState() : null;
  if(previous && previous.day && previous.mode){
    openModal(`<button class="modal-close" onclick="closeModal()">✕</button>
       <h3>Import previous progress?</h3>
-      <p>You have an older simulator save on this browser. Would you like to attach it to this account?</p>
+      <p>You have an older simulator save on this browser. Would you like to attach it to save file 1?</p>
       <p class="faint">Only choose Import if this save belongs to you.</p>
       <div class="btn-row">
         <button class="btn ghost" onclick="closeModal()">Start a new simulation</button>
@@ -2938,19 +3097,25 @@ function basepayLoadGuestSave(saved){
  basepayClearForSignOut();
  if(saved && saved.day && saved.mode) resumeGame(saved);
 }
-function basepayImportOldSave(){
+async function basepayImportOldSave(){
  const previous = loadLegacyState();
- if(!previous || !previous.day || !previous.mode) return;
- resumeGame(previous);
- saveState();
+ if(!previous || !previous.day || !previous.mode || creatingSave) return;
  closeModal();
- toast('Your previous progress is being saved to this account.');
+ if(!await prepareNewSave(previous)) return;
+ resumeGame(previous);
+ toast('Your previous progress was saved to save file 1.');
 }
 function basepayClearForSignOut(){
  closeModal();
  state = null;
+ learnSub = 'lessons';
+ bankSub = 'account';
+ toolsSub = 'budget';
  document.getElementById('app').classList.add('hide');
- document.getElementById('landing').classList.remove('hide');
+ document.getElementById('landing').classList.remove('hide','choosing-save');
+ document.getElementById('save-files').classList.add('hide');
+ document.getElementById('back-to-save-files').classList.add('hide');
+ document.getElementById('mode-error').textContent = '';
 }
 window.addEventListener('DOMContentLoaded', ()=>{
  initTheme();
