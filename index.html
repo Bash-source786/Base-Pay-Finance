@@ -205,6 +205,9 @@ main{flex:1; padding:12px 14px 90px 14px; overflow-x:hidden;}
 .trade-watchlist .btn span{font-variant-numeric:tabular-nums;}
 .trade-exit-status{margin-top:4px;}
 .trade-risk-message{min-height:1.5em;}
+.trade-replay-quotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:8px 0;}
+.trade-replay-quotes>div{border:1px solid var(--border-soft);border-radius:9px;padding:8px;}
+.trade-replay-quotes span,.trade-replay-quotes b{display:block;}
 @media(min-width:650px){.trade-desk-grid{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);}}
 @media(min-width:650px){.wrap{max-width:760px}.feature-grid{grid-template-columns:repeat(4,1fr)}.tabbar-inner{max-width:760px}.landing-hero{padding-top:50px}.mode-cards{display:grid;grid-template-columns:1fr 1fr}}
 .faint{color:var(--text-faint); font-size:11px;}
@@ -2519,6 +2522,7 @@ function renderInvest(){
  const draft = ticket && ticket.dataset.market === state.tradingMarketId ? {
   type:ticket.querySelector('#dt-order-type').value,
   budget:ticket.querySelector('#dt-budget').value,
+  stop:ticket.querySelector('#dt-planned-stop').value,
   limit:ticket.querySelector('#dt-limit').value
  } : null;
  const openPanels = [...el.querySelectorAll('.trade-desk details[open]')].map(panel=>panel.id);
@@ -2579,6 +2583,7 @@ function renderInvest(){
  if(draft && nextTicket?.dataset.market === state.tradingMarketId){
   nextTicket.querySelector('#dt-order-type').value=draft.type;
   nextTicket.querySelector('#dt-budget').value=draft.budget;
+  nextTicket.querySelector('#dt-planned-stop').value=draft.stop;
   if(draft.type==='limit') nextTicket.querySelector('#dt-limit').value=draft.limit;
   updateTradeTicket(state.tradingMarketId);
  }
@@ -2716,6 +2721,7 @@ function submitDayTrade(event, id){
   state.dayTradeCash=tradeMoney(state.dayTradeCash+budget-amount);
  }
  document.getElementById('dt-budget').value='';
+ document.getElementById('dt-planned-stop').value='';
  saveState(); renderAll();
  toast(limit<ask?'Buy limit queued. Cash reserved until it fills or you cancel.':'Simulated position bought.');
 }
@@ -2833,7 +2839,9 @@ function renderTradeTicket(market){
    <div class="field"><label for="dt-order-type">Order type</label><select id="dt-order-type" onchange="updateTradeTicket('${market.id}')"><option value="market">Market buy</option><option value="limit">Limit buy</option></select></div>
    <div class="field"><label for="dt-budget">Trade budget (£)</label><input id="dt-budget" type="number" min="1" step="0.01" inputmode="decimal" required oninput="updateTradeTicket('${market.id}')"></div>
    <div class="field" id="dt-limit-field" hidden><label for="dt-limit">Maximum buy price (£ per ${market.unit || 'unit'})</label><input id="dt-limit" type="number" min="${step}" step="${step}" value="${ask.toFixed(tradeDigits(market))}" inputmode="decimal" disabled oninput="updateTradeTicket('${market.id}')"></div>
-   <p class="trade-note" id="dt-preview" aria-live="polite">Market buys fill at the current ask.</p>
+   <div class="field"><label for="dt-planned-stop">Planned stop (£ per ${market.unit || 'unit'}, optional)</label><input id="dt-planned-stop" type="text" inputmode="decimal" aria-describedby="dt-planned-stop-note" oninput="updateTradeTicket('${market.id}')"></div>
+   <p class="trade-note" id="dt-planned-stop-note">For the estimate only. Set an exit order after your buy fills.</p>
+   <p class="trade-note" id="dt-preview" aria-live="polite">Enter a budget to preview your trade risk.</p>
    <button class="btn primary block" id="dt-place-buy">Place market buy</button>
   </fieldset>
  </form>`;
@@ -2847,19 +2855,35 @@ function updateTradeTicket(id){
  limitField.disabled=!isLimit;
  limitField.required=isLimit;
  document.getElementById('dt-place-buy').textContent=isLimit?'Place limit buy':'Place market buy';
+ const limit=isLimit?Number(limitField.value):null;
+ const stop=document.getElementById('dt-planned-stop').value.trim();
+ document.getElementById('dt-preview').textContent=tradeRiskPreview(market,amount,limit,stop);
+}
+function tradeRiskPreview(market,budget,limit,stop){
+ if(!Number.isFinite(budget) || budget<1) return 'Enter a budget of at least £1 to preview your trade risk.';
+ if(budget>state.dayTradeCash) return 'This budget exceeds your available practice cash.';
+ if(limit!==null && (!Number.isFinite(limit) || limit<10**-tradeDigits(market))) return 'Enter a valid maximum buy price.';
  const {ask,bid}=tradingQuote(market);
- const limit=Number(limitField.value);
- let preview=isLimit?'A buy limit fills only at your price or lower. Cash is reserved while it waits.':'Market buys fill at the current ask.';
- if(Number.isFinite(amount) && amount>=1){
-  if(isLimit && limit>0){
-   const units=amount/limit;
-   preview=`Up to ${fmt2(amount)} reserved for ${units.toLocaleString('en-GB',{maximumSignificantDigits:4})} ${market.unit || 'units'}. ${limit>=ask?'The current ask meets your limit.':'The order waits for the ask to reach your limit.'}`;
-  }else if(!isLimit){
-   const units=amount/ask;
-   preview=`About ${units.toLocaleString('en-GB',{maximumSignificantDigits:4})} ${market.unit || 'units'} at the current ask. Buying and selling immediately would cost ${fmt2(tradeMoney(amount-tradeMoney(units*bid)))} in spread.`;
+ const waiting=limit!==null && limit<ask;
+ const entry=waiting?limit:ask;
+ const units=budget/(limit ?? ask);
+ const cost=tradeMoney(units*entry);
+ const walletPercent=100*budget/tradingAccountTotals().equity;
+ const size=units.toLocaleString('en-GB',{maximumSignificantDigits:5});
+ const spread=tradeMoney(cost-tradeMoney(units*bid));
+ const order=waiting?`${fmt2(budget)} reserved until the ask meets your limit. The spread at the fill may change.`
+  :`Estimated spend ${fmt2(cost)}. Selling straight away at the bid would cost about ${fmt2(spread)} in spread.`;
+ let preview=`About ${size} ${market.unit || 'units'}. Budget: ${walletPercent.toFixed(1)}% of your practice account. ${order}`;
+ if(stop!==''){
+  const stopPrice=Number(stop);
+  if(!Number.isFinite(stopPrice) || stopPrice<=0 || stopPrice>=(waiting?limit:bid)){
+   preview+=waiting?' Enter a planned stop below your buy limit.':' Enter a planned stop below the current bid.';
+  }else{
+   const loss=tradeMoney(cost-tradeMoney(units*stopPrice));
+   preview+=` Estimated loss if you enter at ${tradePrice(market,entry)} and exit at your stop: ${fmt2(loss)}. A price jump could increase the loss.`;
   }
  }
- document.getElementById('dt-preview').textContent=preview;
+ return preview;
 }
 function renderTradeWatchlist(market,selected){
  const candles=state.intradayCandles[market.id];
@@ -2902,19 +2926,107 @@ function renderTradingExits(market,position,sessionEnded){
   </div>
  </details>`;
 }
-function renderTradingDesk(){
- const choices=tradingMarkets();
- const selected=choices.find(market=>market.id===state.tradingMarketId) || tradingMarket('xau');
- state.tradingMarketId=selected.id;
+
+const GOLD_REPLAY = {
+ cash:250, mid:2450, limit:2445, releaseStep:8,
+ plans:[
+  ['observe','Stay in cash through the announcement'],
+  ['lower','Buy only at a lower price'],
+  ['now','Accept the current price to get exposure before the news']
+ ],
+ actions:[
+  ['wait','Wait in cash','observe'],
+  ['limit','Place a buy limit at £2,445.00','lower'],
+  ['market','Buy now at the ask','now']
+ ],
+ forecasts:[
+  ['down','Gold would tend to cost fewer pounds'],
+  ['up','Gold would tend to cost more pounds'],
+  ['flat','A stronger pound leaves the GBP gold quote unchanged']
+ ]
+};
+function getGoldReplayOutcome(replay){
+ const action=GOLD_REPLAY.actions.find(item=>item[0]===replay?.action);
+ const plan=GOLD_REPLAY.plans.find(item=>item[0]===replay?.plan);
+ const forecast=GOLD_REPLAY.forecasts.find(item=>item[0]===replay?.forecast);
+ if(!action || !plan || !forecast) return null;
+ const market=tradingMarket('xau');
+ const news=TRADING_NEWS.find(item=>item.id==='gbp');
+ const before=tradingQuote(market,GOLD_REPLAY.mid,false);
+ const after=tradingQuote(market,GOLD_REPLAY.mid*(1+news.shock),true);
+ const limitFilled=action[0]==='limit' && after.ask<=GOLD_REPLAY.limit;
+ const entry=action[0]==='market'?before.ask:limitFilled?after.ask:null;
+ const units=entry===null?0:GOLD_REPLAY.cash/(limitFilled?GOLD_REPLAY.limit:entry);
+ const result=tradeMoney(tradeMoney(units*after.bid)-tradeMoney(units*(entry ?? 0)));
+ return {action,plan,forecast,market,news,before,after,entry,result,limitFilled};
+}
+function submitGoldReplay(event){
+ event.preventDefault();
+ const form=event.currentTarget.elements;
+ const result={plan:form.replayPlan.value,forecast:form.replayForecast.value,action:form.replayAction.value};
+ if(!getGoldReplayOutcome(result)) return;
+ state.goldReplay=result;
+ refreshGoldReplay();
+}
+function resetGoldReplay(){
+ delete state.goldReplay;
+ refreshGoldReplay();
+}
+function refreshGoldReplay(){
+ saveState();
+ document.getElementById('dt-replay-body').innerHTML=renderGoldReplay();
+ document.getElementById('dt-replay-heading').focus();
+}
+function renderGoldReplay(){
+ const replay=getGoldReplayOutcome(state.goldReplay);
+ if(replay){
+  const {action,plan,forecast,market,news,before,after,entry,result,limitFilled}=replay;
+  const fill=entry!==null?`Your ${limitFilled?'limit order':'market buy'} filled at ${tradePrice(market,entry)} per troy ounce. Valued at the new bid, the position is ${tradingPnl(result)} since entry.`
+   :action[0]==='limit'?'Your buy limit stayed pending because the ask remained above your limit.':'You stayed in cash through the announcement. Your replay balance stayed at £250.';
+  return `<h3 id="dt-replay-heading" tabindex="-1">${tradingTime(GOLD_REPLAY.releaseStep)} · ${news.title}</h3>
+   <div class="trade-replay-quotes">
+    <div><b>Before the release</b><span>Bid ${tradePrice(market,before.bid)} · Ask ${tradePrice(market,before.ask)}</span><span>Spread ${fmt2(before.ask-before.bid)} per oz</span></div>
+    <div><b>At the release</b><span>Bid ${tradePrice(market,after.bid)} · Ask ${tradePrice(market,after.ask)}</span><span>Spread ${fmt2(after.ask-after.bid)} per oz</span></div>
+   </div>
+   <p><b>Your order.</b> ${fill}</p>
+   <p><b>Your forecast.</b> ${forecast[0]==='down'?'You expected the GBP gold quote to fall, as it did in this replay.':'The GBP gold quote fell in this replay. A stronger pound buys more gold when other factors stay the same.'}</p>
+   <p><b>Your plan.</b> ${action[2]===plan[0]?'Your action matched your plan.':'Your action departed from your plan. Try again and choose the action that matches what you want to do.'}</p>
+   <button type="button" class="btn sm" onclick="resetGoldReplay()">Replay again</button>`;
+ }
+ const market=tradingMarket('xau');
+ const {bid,ask}=tradingQuote(market,GOLD_REPLAY.mid,false);
+ const select=(id,label,options)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}" name="${id}" required><option value="">Choose an answer</option>${options.map(([key,text])=>`<option value="${key}">${text}</option>`).join('')}</select></div>`;
+ return `<h3 id="dt-replay-heading" tabindex="-1">${tradingTime(GOLD_REPLAY.releaseStep-1)} · 15 minutes before the release</h3>
+  <p>You have ${fmt2(GOLD_REPLAY.cash)} in a separate replay wallet. A UK rate decision is due. Gold currently has a bid of ${tradePrice(market,bid)} and an ask of ${tradePrice(market,ask)} per troy ounce.</p>
+  <form onsubmit="submitGoldReplay(event)">
+   ${select('replayPlan','What is your plan?',GOLD_REPLAY.plans)}
+   ${select('replayForecast','If sterling strengthens, what happens to gold priced in pounds, all else equal?',GOLD_REPLAY.forecasts)}
+   ${select('replayAction','What will you do?',GOLD_REPLAY.actions)}
+   <button class="btn primary sm">Reveal announcement</button>
+  </form>`;
+}
+
+function tradingAccountTotals(){
  const positions=state.dayTrades.reduce((sum,position)=>sum+tradingPositionValue(position),0);
  const unrealised=state.dayTrades.reduce((sum,position)=>sum+tradingPositionPnl(position),0);
  const reserved=state.dayTradeOrders.reduce((sum,order)=>sum+order.budget,0);
  const equity=tradeMoney(state.dayTradeCash+reserved+positions);
+ return {positions,unrealised,reserved,equity};
+}
+function renderTradingDesk(){
+ const choices=tradingMarkets();
+ const selected=choices.find(market=>market.id===state.tradingMarketId) || tradingMarket('xau');
+ state.tradingMarketId=selected.id;
+ const {positions,unrealised,reserved,equity}=tradingAccountTotals();
  const realised=tradeMoney(equity-TRADING_STARTING_CASH-unrealised);
  const sessionEnded=state.intradayStep>=TRADING_SESSION_STEPS;
  const news=state.tradingNews[0];
  return `<div class="section-title"><h2>Trading desk</h2><span class="badge cyan">Practice only</span></div>
  <section class="card trade-desk" id="practice-trading-desk" aria-label="Practice trading desk" tabindex="-1">
+  <details class="details-card" id="dt-gold-replay">
+   <summary>Guided replay · Gold before a rate announcement</summary>
+   <div class="details-content" id="dt-replay-body">${renderGoldReplay()}</div>
+  </details>
   <div class="card-row"><b>Session ${state.tradingSession} · ${tradingTime(Math.min(state.intradayStep,TRADING_SESSION_STEPS))}</b><span class="badge gray">${sessionEnded?'Market closed':'Market open'}</span></div>
   <p class="trade-note">Trade shares, gold and fictional currencies using a separate practice wallet and simulated prices.</p>
   <div class="card-row"><span class="muted">Practice account value</span><b>${fmt2(equity)}</b></div>
