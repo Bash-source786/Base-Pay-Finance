@@ -80,9 +80,7 @@
         </div>
         <footer class="footer-note">
           <p>BasePay is an educational simulation. It is not financial advice.</p>
-          <nav aria-label="Money guidance and privacy">
-            <a href="https://www.gov.uk/">GOV.UK</a>
-            <a href="https://www.moneyhelper.org.uk/en">MoneyHelper</a>
+          <nav aria-label="Privacy">
             <a href="privacy.html">Privacy</a>
           </nav>
         </footer>
