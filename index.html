@@ -198,6 +198,13 @@ main{flex:1; padding:12px 14px 90px 14px; overflow-x:hidden;}
 .trade-candles{display:block;width:100%;height:auto;color:var(--text-dim);font-family:var(--font-mono);}
 .trade-note{font-size:12px;color:var(--text-dim);margin:6px 0;line-height:1.5;}
 .trade-time{margin-top:10px;flex-wrap:wrap;}
+.trade-watchlist,.trade-exit-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:8px;}
+.trade-watchlist{margin:12px 0;}
+.trade-watchlist .btn{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;}
+.trade-watchlist .btn[aria-pressed="true"]{border-color:var(--cyan);}
+.trade-watchlist .btn span{font-variant-numeric:tabular-nums;}
+.trade-exit-status{margin-top:4px;}
+.trade-risk-message{min-height:1.5em;}
 @media(min-width:650px){.trade-desk-grid{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);}}
 @media(min-width:650px){.wrap{max-width:760px}.feature-grid{grid-template-columns:repeat(4,1fr)}.tabbar-inner{max-width:760px}.landing-hero{padding-top:50px}.mode-cards{display:grid;grid-template-columns:1fr 1fr}}
 .faint{color:var(--text-faint); font-size:11px;}
@@ -727,17 +734,22 @@ const LESSONS = [
  quiz:{q:"What is the key difference between day trading and long-term investing?",options:["Day trading tries to benefit from short-term moves and usually closes positions the same day","Day trading guarantees faster profits","Long-term investing cannot lose money"],correct:0,explain:"Day trading focuses on short-term price moves. It is uncertain, time-intensive and can lead to rapid losses; long-term investing has different goals and risks."}},
 {id:16,cat:'Trading',title:'Position Size, Stops and Risk',gate:null,
  practiceAction:"goToInvestTab()", practiceLabel:"Invest → practise with simulated funds",
- body:"A risk plan starts before a trade. Position size is how much exposure you take; a stop-loss is an instruction intended to close a position if price reaches a chosen level, though real execution can differ in fast markets and gaps. Never assume a stop makes a trade safe. Decide what loss you could tolerate, avoid putting all your money into one idea, and remember that a small planned loss can still occur repeatedly. The trading desk includes a bid–ask spread and lets you practise buy limit orders. Real trades can also involve commissions, taxes and slippage.",
+ body:"A risk plan starts before a trade. Position size is how much exposure you take. On the trading desk, a stop-loss triggers when the bid falls to or below your level. If the bid jumps past it, the trade can close below your trigger. A take-profit triggers when the bid reaches your target or higher. Decide how much you could lose before you buy. In real markets, costs and execution can change your result.",
  quiz:{q:"What is a sensible reason to decide your position size before entering a trade?",options:["To know how much you could lose if the trade moves against you","To make the market move in your favour","To guarantee that a stop-loss executes at the exact price"],correct:0,explain:"Position sizing helps you understand exposure before acting. Stops and limits do not guarantee a specific outcome, especially in fast or illiquid markets."}},
 {id:17,cat:'Trading',title:'Spreads, Volatility and Trading Discipline',gate:null,
  practiceAction:"goToInvestTab()", practiceLabel:"Invest → compare a price move with your result",
  body:"The spread is the gap between the price buyers are willing to pay and the price sellers ask; it is one of the costs of trading. Volatility describes how much a price moves, not whether it will move in your favour. A plan can also be undermined by chasing a rising price, revenge trading after a loss or making too many trades. Keep a simple journal of the reason for each simulated trade, the risk considered and what happened. The aim is to practise disciplined decisions, not to chase a daily profit target.",
  quiz:{q:"A highly volatile share is moving sharply. What does volatility tell you?",options:["The price is moving a lot, but not which way it will go next","The share is certain to rise","The share has no trading costs"],correct:0,explain:"Volatility measures the scale of price movements, not their direction. A sharp move can go against you just as quickly as it can go in your favour."}},
+{id:18,cat:'Trading',title:'How to Read Gold and Forex Quotes',gate:null,
+ practiceAction:"goToTradingDesk()", practiceLabel:"Trading desk → compare LUM/GBP and gold",
+ body:"Read a pair from left to right. The first symbol is what you buy or sell. The second says which currency you pay in. LUM/GBP at £1.2480 means one fictional lumen costs 1.2480 pounds at that quote. A rise to £1.2481 is one pip for this pair. Gold uses XAU. An XAU/GBP quote is pounds per troy ounce, and the desk allows fractional ounces. If sterling strengthens, the same ounce of gold or unit of foreign currency can cost fewer pounds, all else equal. Spend one practice session comparing the three GBP quotes around the simulated UK announcement.",
+ quiz:{q:"XAU/GBP rises from £2,450 to £2,460. What has changed?",options:["A troy ounce of gold costs £10 more in pounds at the new quote","One pound buys £10 more gold","Gold rose by 10%"],correct:0,explain:"XAU/GBP measures pounds per troy ounce. The increase is £10 per ounce at these quotes, before accounting for the bid and ask."}},
 ];
 
 
 /* ---------------- SCENARIO-BASED LESSONS ---------------- */
 const LESSON_SCENARIOS = {
+  "18": { scene:"LUM/GBP falls from £1.2480 to £1.2400 after a fictional UK rate announcement.", prompt:"What happened to the pound cost of one lumen?", options:[{label:"It rose by £0.0080",feedback:"The number of pounds needed for one lumen fell."},{label:"It fell by £0.0080",feedback:"Correct. Each lumen costs 0.8 pence less at the new quote, before accounting for the spread."},{label:"It stayed the same because the pair still ends in GBP",feedback:"GBP identifies the quote currency. The number tells you the price in pounds, which changed."}], takeaway:"The second symbol tells you how the price is measured. A falling LUM/GBP quote means fewer pounds per lumen." },
   "15": { scene:"You see a share jump 4% in the morning and feel you might miss out. You have only just started learning about markets.", prompt:"What is the best first step?", options:[{label:"Buy immediately before the price rises further",feedback:"Chasing a move can mean buying after much of it has already happened. A price rise does not tell you what happens next."},{label:"Pause, understand the setup and decide what loss you could tolerate",feedback:"Good. A trade should have a reason and a risk plan before you enter. You can also decide not to trade."},{label:"Use all available funds to make the outcome matter",feedback:"Concentrating all your funds magnifies the impact of a bad move. It does not improve your ability to predict the market."}], takeaway:"Day trading focuses on short-term moves and can be risky. A simulator is for learning the mechanics, not proof of a profitable strategy." },
   "16": { scene:"You are considering a simulated £1,000 trade. If the price moves against you, you do not want one decision to wipe out your practice balance.", prompt:"What should you think about before entering?", options:[{label:"How much I could lose and how large the position should be",feedback:"Correct. Exposure and possible loss should be considered before entering, not after a trade starts moving."},{label:"Only how much I could make if it works",feedback:"Looking only at upside ignores the other half of the decision: losses can happen quickly and may exceed expectations."},{label:"Assume a stop-loss guarantees the exact exit price",feedback:"Stops can help define an intended exit, but fast markets and price gaps can mean the execution price differs."}], takeaway:"Position size, risk limits and an exit plan help structure a trade, but they cannot make trading risk-free." },
   "17": { scene:"A share is jumping up and down. You have already made two trades today, one at a loss, and feel tempted to trade again to win it back.", prompt:"Which response is most disciplined?", options:[{label:"Trade again straight away to recover the loss",feedback:"This is often called revenge trading. It can turn one loss into a series of emotional decisions."},{label:"Pause, account for spread and risk, and review my plan",feedback:"Right. Spreads can create a cost, volatility is not a direction signal, and a pause can stop emotions driving the next decision."},{label:"Assume volatility means a guaranteed opportunity",feedback:"Volatility means prices move more, not that a profitable opportunity is guaranteed."}], takeaway:"Trading discipline includes understanding costs, respecting uncertainty and stopping when emotions take over." },
@@ -1097,11 +1109,13 @@ const TRADING_MARKETS = [
  {id:'nvr', type:'forex', name:'Novar (NVR/GBP)', price:.7240, vol:.012, unit:'NVR', spread:.0009},
 ];
 const TRADING_NEWS = [
+ {id:'gbp', title:'Sterling strengthens after a surprise UK rate rise', detail:'Gold and both fictional currencies are quoted in pounds. In this scenario, sterling buys more of each, so their GBP prices face downward pressure.', shock:-.0055},
  {id:'lum', title:'Lumen central bank surprises with a rate rise', detail:'Higher-than-expected rates can increase demand for a currency. Watch LUM/GBP and its spread.', shock:.007},
  {id:'nvr', title:'Novar inflation comes in below expectations', detail:'Traders bring forward expectations of a rate cut. In this scenario, NVR weakens against sterling.', shock:-.008},
  {id:'xau', title:'Demand for gold rises as markets turn cautious', detail:'Some investors turn to gold during uncertainty. Watch XAU/GBP and the cost of entering during the move.', shock:.009},
 ];
 const TRADING_SESSION_STEPS = 26;
+const TRADING_STARTING_CASH = 10000;
 
 /* ---------------- DATA: PROPERTY LISTINGS ---------------- */
 const PROPERTY_LISTINGS = [
@@ -1936,6 +1950,12 @@ function goToBankIsas(){ closeModal(); bankSub='isas'; switchTab('bank'); }
 function goToBankSavings(){ closeModal(); bankSub='savings'; switchTab('bank'); }
 function goToBankPension(){ closeModal(); bankSub='pension'; switchTab('bank'); }
 function goToInvestTab(){ closeModal(); switchTab('invest'); }
+function goToTradingDesk(){
+ goToInvestTab();
+ const desk=document.getElementById('practice-trading-desk');
+ desk.scrollIntoView({block:'start'});
+ desk.focus({preventScroll:true});
+}
 function goToLearnTab(){ closeModal(); switchTab('learn'); }
 function goToCreditTab(){ closeModal(); switchTab('credit'); }
 function goToHome(){ closeModal(); switchTab('home'); }
@@ -2555,9 +2575,12 @@ function renderInvest(){
  // sparklines + ticker
  visibleAssets().forEach(a=>{ const c=document.getElementById('spark-'+a.id); if(c) drawLineChart(c, state.priceHistory[a.id].slice(-30), priceOf(a.id)>=state.priceHistory[a.id][Math.max(0,state.priceHistory[a.id].length-31)]?'#3ddc97':'#ff6b6b'); });
  renderTicker('invest-ticker');
- openPanels.forEach(id=>{ document.getElementById(id).open=true; });
+ openPanels.forEach(id=>{
+  const panel=document.getElementById(id);
+  if(panel) panel.open=true;
+ });
  const nextTicket = el.querySelector('#dt-ticket form');
- if(draft && nextTicket.dataset.market === state.tradingMarketId){
+ if(draft && nextTicket?.dataset.market === state.tradingMarketId){
   nextTicket.querySelector('#dt-order-type').value=draft.type;
   nextTicket.querySelector('#dt-budget').value=draft.budget;
   if(draft.type==='limit') nextTicket.querySelector('#dt-limit').value=draft.limit;
@@ -2571,7 +2594,7 @@ function renderInvest(){
 function tradingMarket(id){ return TRADING_MARKETS.find(market=>market.id===id); }
 function tradingMarkets(){ return TRADING_MARKETS.filter(market=>!(state.shariah && market.conventional)); }
 function ensureTradingState(){
- state.dayTradeCash ??= 10000;
+ state.dayTradeCash ??= TRADING_STARTING_CASH;
  state.dayTrades ??= [];
  state.dayTradeHistory ??= [];
  state.dayTradeOrders ??= [];
@@ -2591,8 +2614,10 @@ function tradePrice(market, price){
  return '£'+price.toLocaleString('en-GB',{minimumFractionDigits:digits,maximumFractionDigits:digits});
 }
 function tradeMoney(amount){ return Math.round(amount*100)/100; }
+function isSterlingMarket(market){ return market.type==='forex'||market.type==='gold'; }
+function tradingNewsAffects(event, market){ return event.id===market.id || (event.id==='gbp' && isSterlingMarket(market)); }
 function tradingQuote(market, mid=state.intradayPrices[market.id],
- news=state.tradingNews.find(event=>event.step===state.intradayStep && event.id===market.id)){
+ news=state.tradingNews.some(event=>event.step===state.intradayStep && tradingNewsAffects(event,market))){
  const scale=10**tradeDigits(market);
  const halfSpread=mid*(market.spread ?? .001)*(news?2.5:1)/2;
  const bid=Math.max(1,Math.floor((mid-halfSpread)*scale));
@@ -2637,32 +2662,40 @@ function fillTradingOrders(market, ask){
 }
 function stepIntraday(steps){
  ensureTradingState();
- let fills=0;
+ let fills=0, exits=0;
  const end=Math.min(state.intradayStep+steps,TRADING_SESSION_STEPS);
  while(state.intradayStep<end){
   const step=++state.intradayStep;
   let event;
-  if([4,12,20].includes(step)){
-   const remaining=TRADING_NEWS.filter(news=>!state.tradingNews.some(previous=>previous.id===news.id));
+  if([4,8,12,20].includes(step)){
+   const remaining=TRADING_NEWS.filter(news=>(news.id==='gbp')===(step===8) && !state.tradingNews.some(previous=>previous.id===news.id));
    event=remaining[Math.floor(Math.random()*remaining.length)];
    if(event) state.tradingNews.unshift({id:event.id,step});
   }
+  const sterlingMoves=Array.from({length:4},()=> (Math.random()-.5)*.0012);
   for(const market of TRADING_MARKETS){
    const open=state.intradayPrices[market.id];
-   const shock=event?.id===market.id?event.shock:0;
+   const shock=event && tradingNewsAffects(event,market)?event.shock:0;
    const prices=[open];
    let mid=open;
    for(let tick=0;tick<4;tick++){
-    mid=Math.max(.05,mid*(1+(Math.random()-.5)*market.vol*.32+(tick===0?shock:0)));
+    const sterlingMove=isSterlingMarket(market)?sterlingMoves[tick]:0;
+    mid=Math.max(.05,mid*(1+(Math.random()-.5)*market.vol*.32+sterlingMove+(tick===0?shock:0)));
     prices.push(mid);
-    fills+=fillTradingOrders(market,tradingQuote(market,mid).ask);
+    const {ask,bid}=tradingQuote(market,mid);
+    const position=state.dayTrades.find(item=>item.assetId===market.id);
+    if(position) exits+=Number(triggerTradingExit(position,bid));
+    fills+=fillTradingOrders(market,ask);
    }
    state.intradayPrices[market.id]=mid;
    state.intradayCandles[market.id].push({open,high:Math.max(...prices),low:Math.min(...prices),close:mid,step});
   }
  }
  saveState(); renderAll();
- if(fills) toast(fills===1?'One limit order filled.':`${fills} limit orders filled.`);
+ const changes=[];
+ if(fills) changes.push(fills===1?'One buy limit filled.':`${fills} buy limits filled.`);
+ if(exits) changes.push(exits===1?'One exit order triggered.':`${exits} exit orders triggered.`);
+ if(changes.length) toast(changes.join(' '));
 }
 function submitDayTrade(event, id){
  event.preventDefault();
@@ -2701,12 +2734,40 @@ function tradingPositionValue(position){
 function tradingPositionPnl(position){
  return tradeMoney(tradingPositionValue(position)-(position.cost ?? position.units*position.avgPrice));
 }
-function closeDayPosition(position, action){
- const price=tradingQuote(tradingMarket(position.assetId)).bid;
- const amount=tradingPositionValue(position), pnl=tradingPositionPnl(position);
+function closeDayPosition(position, action, price=tradingQuote(tradingMarket(position.assetId)).bid, triggerPrice){
+ const amount=tradeMoney(position.units*price);
+ const pnl=tradeMoney(amount-(position.cost ?? position.units*position.avgPrice));
  state.dayTradeCash=tradeMoney(state.dayTradeCash+amount);
- logDayTrade({assetId:position.assetId,price,amount,pnl,action});
+ logDayTrade({assetId:position.assetId,price,amount,pnl,action,triggerPrice});
  return pnl;
+}
+function triggerTradingExit(position,bid){
+ const stop=position.stopLoss;
+ const target=position.takeProfit;
+ if(stop>0 && bid<=stop){
+  closeDayPosition(position,'Stop-loss filled',bid,stop);
+ }else if(target>0 && bid>=target){
+  closeDayPosition(position,'Take-profit filled',bid,target);
+ }else{
+  return false;
+ }
+ state.dayTrades.splice(state.dayTrades.indexOf(position),1);
+ return true;
+}
+function saveTradingExits(event,id){
+ event.preventDefault();
+ const position=state.dayTrades.find(item=>item.assetId===id);
+ if(!position || state.intradayStep>=TRADING_SESSION_STEPS) return;
+ const stopLoss=event.currentTarget.elements.stopLoss.valueAsNumber;
+ const takeProfit=event.currentTarget.elements.takeProfit.valueAsNumber;
+ const {bid}=tradingQuote(tradingMarket(id));
+ if(stopLoss>=bid || takeProfit<=bid){
+  document.getElementById('dt-exit-message-'+id).textContent='Set your stop-loss below the current bid and your take-profit above it.';
+  return;
+ }
+ position.stopLoss=Number.isFinite(stopLoss)?stopLoss:null;
+ position.takeProfit=Number.isFinite(takeProfit)?takeProfit:null;
+ saveState(); renderAll(); toast(position.stopLoss || position.takeProfit?'Exit orders saved.':'Exit orders cleared.');
 }
 function dayTradeSell(id){
  const position=state.dayTrades.find(item=>item.assetId===id);
@@ -2804,12 +2865,46 @@ function updateTradeTicket(id){
  }
  document.getElementById('dt-preview').textContent=preview;
 }
+function renderTradeWatchlist(market,selected){
+ const candles=state.intradayCandles[market.id];
+ const mid=state.intradayPrices[market.id];
+ const open=candles[0]?.open ?? mid;
+ const change=100*(mid/open-1);
+ const changeLabel=(change>=0?'+':'')+change.toFixed(2)+'%';
+ return `<button type="button" class="btn sm" id="dt-watch-${market.id}" data-watch-market="${market.id}" aria-pressed="${selected.id===market.id}" onclick="selectTradeMarket('${market.id}')">
+  <b>${market.id.toUpperCase()}/GBP</b><span>${tradePrice(market,mid)}</span><span class="${change>=0?'pos':'neg'}">${changeLabel} this session</span>
+ </button>`;
+}
 function selectTradeMarket(id){
  const market=tradingMarkets().find(item=>item.id===id);
- if(!market) return;
+ if(!market || state.tradingMarketId===id) return;
  state.tradingMarketId=id;
+ document.getElementById('dt-market').value=id;
+ document.querySelectorAll('[data-watch-market]').forEach(button=>{
+  button.setAttribute('aria-pressed',String(button.dataset.watchMarket===id));
+ });
  document.getElementById('dt-market-data').innerHTML=renderTradeMarket(market);
  document.getElementById('dt-ticket').innerHTML=renderTradeTicket(market);
+}
+function renderTradingExits(market,position,sessionEnded){
+ const step=10**-tradeDigits(market);
+ const stop=position.stopLoss, target=position.takeProfit;
+ return `<details class="details-card" id="dt-exits-${market.id}">
+  <summary>Exit orders for ${market.name}</summary>
+  <div class="details-content">
+   ${stop || target?`<div class="trade-exit-status">${stop?'Stop-loss '+tradePrice(market,stop):''}${stop && target?' · ':''}${target?'Take-profit '+tradePrice(market,target):''}</div>`:''}
+   ${sessionEnded?'<p>The session has ended. Close manually or settle at the final bid when the next session starts.</p>':`
+   <p>Both orders use the bid and apply to the whole position. The first one to trigger closes the position. Leave a field blank to clear that order.</p>
+   <form onsubmit="saveTradingExits(event,'${market.id}')">
+    <div class="trade-exit-fields">
+     <div class="field"><label for="dt-stop-${market.id}">Stop-loss (£)</label><input id="dt-stop-${market.id}" name="stopLoss" type="number" min="${step}" step="${step}" inputmode="decimal" value="${stop ?? ''}"></div>
+     <div class="field"><label for="dt-target-${market.id}">Take-profit (£)</label><input id="dt-target-${market.id}" name="takeProfit" type="number" min="${step}" step="${step}" inputmode="decimal" value="${target ?? ''}"></div>
+    </div>
+    <button class="btn sm" id="dt-save-exits-${market.id}">Save exit orders</button>
+    <div class="trade-risk-message" id="dt-exit-message-${market.id}" role="status"></div>
+   </form>`}
+  </div>
+ </details>`;
 }
 function renderTradingDesk(){
  const choices=tradingMarkets();
@@ -2818,16 +2913,20 @@ function renderTradingDesk(){
  const positions=state.dayTrades.reduce((sum,position)=>sum+tradingPositionValue(position),0);
  const unrealised=state.dayTrades.reduce((sum,position)=>sum+tradingPositionPnl(position),0);
  const reserved=state.dayTradeOrders.reduce((sum,order)=>sum+order.budget,0);
+ const equity=tradeMoney(state.dayTradeCash+reserved+positions);
+ const realised=tradeMoney(equity-TRADING_STARTING_CASH-unrealised);
  const sessionEnded=state.intradayStep>=TRADING_SESSION_STEPS;
  const news=state.tradingNews[0];
  return `<div class="section-title"><h2>Trading desk</h2><span class="badge cyan">Practice only</span></div>
- <section class="card trade-desk" aria-label="Practice trading desk">
+ <section class="card trade-desk" id="practice-trading-desk" aria-label="Practice trading desk" tabindex="-1">
   <div class="card-row"><b>Session ${state.tradingSession} · ${tradingTime(Math.min(state.intradayStep,TRADING_SESSION_STEPS))}</b><span class="badge gray">${sessionEnded?'Market closed':'Market open'}</span></div>
   <p class="trade-note">Trade shares, gold and fictional currencies using a separate practice wallet and simulated prices.</p>
+  <div class="card-row"><span class="muted">Practice account value</span><b>${fmt2(equity)}</b></div>
   <div class="card-row"><span class="muted">Available cash</span><b>${fmt2(state.dayTradeCash)}</b></div>
   ${reserved?`<div class="card-row"><span class="muted">Cash reserved for orders</span><span>${fmt2(reserved)}</span></div>`:''}
   <div class="card-row"><span class="muted">Open positions at bid</span><span>${fmt2(positions)}</span></div>
   <div class="card-row"><span class="muted">Unrealised profit or loss</span><span class="${unrealised>=0?'pos':'neg'}">${tradingPnl(unrealised)}</span></div>
+  <div class="card-row"><span class="muted">Realised profit or loss</span><span class="${realised>=0?'pos':'neg'}">${tradingPnl(realised)}</span></div>
   <div class="btn-row trade-time">
    <button class="btn" id="dt-time-15" onclick="stepIntraday(1)" ${sessionEnded?'disabled':''}>+15 min</button>
    <button class="btn" id="dt-time-60" onclick="stepIntraday(4)" ${sessionEnded?'disabled':''}>+1 hour</button>
@@ -2835,6 +2934,9 @@ function renderTradingDesk(){
    <button class="btn" id="dt-session" onclick="closeTradingSession()">${sessionEnded?'Start next session':'End session'}</button>
   </div>
   ${sessionEnded?'<p class="trade-note">The final quote stays visible. You can close positions at the final bid or settle them automatically when you start the next session.</p>':''}
+  <div class="trade-watchlist" role="group" aria-label="Gold and fictional forex watchlist">
+   ${choices.filter(isSterlingMarket).map(market=>renderTradeWatchlist(market,selected)).join('')}
+  </div>
   <div class="trade-desk-grid">
    <div class="card tight trade-panel">
     <div class="field"><label for="dt-market">Market</label><select id="dt-market" onchange="selectTradeMarket(this.value)">
@@ -2858,22 +2960,22 @@ function renderTradingDesk(){
   <h3 class="trade-note">Open positions</h3>
   ${state.dayTrades.length?state.dayTrades.map(position=>{
    const market=tradingMarket(position.assetId),pnl=tradingPositionPnl(position);
-   return `<div class="trade-quote">
+   return `<div class="trade-position"><div class="trade-quote">
     <div><b>${market.name}</b><div class="muted">${position.units.toLocaleString('en-GB',{maximumSignificantDigits:5})} ${market.unit || 'units'} · avg ${tradePrice(market,position.avgPrice)}</div></div>
     <div class="trade-result"><b>${fmt2(tradingPositionValue(position))}</b><div class="${pnl>=0?'pos':'neg'}">${tradingPnl(pnl)}</div></div>
     <button class="btn sm" onclick="dayTradeSell('${market.id}')" aria-label="Close ${market.name} position">Close</button>
-   </div>`;
+   </div>${renderTradingExits(market,position,sessionEnded)}</div>`;
   }).join(''):'<p class="trade-note">Your practice positions will appear here.</p>'}
   ${state.dayTradeHistory.length?`<details class="details-card" id="dt-history"><summary>Recent trade history</summary><div class="details-content">${state.dayTradeHistory.slice(0,12).map(entry=>{
    const market=tradingMarket(entry.assetId);
-   return `<div class="trade-quote"><div><b>${entry.action} · ${market.name}</b><div>${entry.session?`Session ${entry.session} · ${tradingTime(entry.step)} · `:''}${tradePrice(market,entry.price)} per ${market.unit || 'unit'}</div></div><div class="trade-result">${fmt2(entry.amount)}${typeof entry.pnl==='number'?`<div class="${entry.pnl>=0?'pos':'neg'}">${tradingPnl(entry.pnl)}</div>`:''}</div></div>`;
+   return `<div class="trade-quote"><div><b>${entry.action} · ${market.name}</b><div>${entry.session?`Session ${entry.session} · ${tradingTime(entry.step)} · `:''}${tradePrice(market,entry.price)} per ${market.unit || 'unit'}${entry.triggerPrice?' · Trigger '+tradePrice(market,entry.triggerPrice):''}</div></div><div class="trade-result">${fmt2(entry.amount)}${typeof entry.pnl==='number'?`<div class="${entry.pnl>=0?'pos':'neg'}">${tradingPnl(entry.pnl)}</div>`:''}</div></div>`;
   }).join('')}</div></details>`:''}
   <details class="details-card" id="dt-help"><summary>How to read the trading desk</summary><div class="details-content">
    <p>Each candle shows the first, highest, lowest and last midpoint in a 15-minute period. Market buys fill at the ask, and closing a position sells at the bid. The gap is the spread.</p>
    <p>A buy limit sets your highest acceptable price. It can stay pending even if a candle dips below the limit, because the ask can still be higher. Ending the session cancels pending orders and releases their cash.</p>
    <p>Try buying a small amount of gold and looking at the open profit or loss before advancing time. Then watch how a fictional news release affects a currency pair and its spread.</p>
-   <p>This cash-only simulator models bid and ask prices. Real markets can also involve leverage, commissions, taxes, slippage and partial fills.</p>
-   <button type="button" class="btn sm" onclick="goToLesson(17)">Learn about spreads and volatility</button>
+   <p>Exit orders use the bid. A stop-loss can fill below its trigger when the bid jumps past it. Pending buy limits are independent and can open a new position after an exit. Positions are fully funded with practice cash.</p>
+   <div class="btn-row"><button type="button" class="btn sm" onclick="goToLesson(18)">Learn how to read gold and forex quotes</button><button type="button" class="btn sm" onclick="goToLesson(16)">Learn about position size and stops</button></div>
   </div></details>
  </section>`;
 }
