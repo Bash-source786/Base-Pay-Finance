@@ -548,6 +548,10 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 .save-files .mode-cards{grid-template-columns:1fr}
 .save-files .mode-card{margin:0}
 #landing.choosing-save :is(.landing-hero,.feature-grid,.landing-summary,#mode-selection){display:none}
+.home-actions{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,130px),1fr))}
+.home-actions .btn{min-height:44px;white-space:normal}
+.home-resume{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.home-resume p,.home-resume h2{margin-bottom:2px}
 </style>
 <script defer src="analytics-config.js"></script>
 <script defer src="analytics.js"></script>
@@ -1165,7 +1169,7 @@ function defaultState(mode){
  return {
   mode: mode, day:1, taxYearStartDay:1, cash: mode==='youth'?150:900, xp:0,
   studentLoan:false, electoralRoll:false, shariah:false,
-  lessonsCompleted:[], freePlay:false, freePlayAnnounced:false,
+  lessonsCompleted:[], lessonCheckpoints:[], freePlay:false, freePlayAnnounced:false,
   bankId:'nimbus', budget:null,
   savings:{balance:0}, fixedTerm:null, premiumBonds:{balance:0, wins:[]},
   isa:{ cash:{balance:0}, stocks:{balance:0}, lifetime:{balance:0}, innovative:{balance:0, loans:[]}, junior:{balance:0} },
@@ -1715,17 +1719,39 @@ function sellProperty(propId){
 }
 
 /* ---------------- LESSONS / QUIZ / MODE ---------------- */
-function lessonStepHeader(step, title){
- const labels=['Situation','Decision','Learn','Practice'];
- return `<div style="display:flex;gap:5px;margin:12px 0 16px;">${labels.map((label,i)=>`<div style="flex:1;"><div style="height:4px;border-radius:4px;background:${i<=step?'var(--cyan)':'var(--border)'};margin-bottom:5px;"></div><div style="font-size:9px;color:${i===step?'var(--text)':'var(--text-faint)'};">${label}</div></div>`).join('')}</div>`;
+const LESSON_STEPS = ['Situation','Decision','Outcome','Learn','Practice'];
+function lessonStepHeader(step){
+ return `<div aria-label="Lesson progress" role="group" style="display:flex;gap:5px;margin:12px 0 16px;">${LESSON_STEPS.map((label,i)=>`<div ${i===step?'aria-current="step"':''} style="flex:1;"><div style="height:4px;border-radius:4px;background:${i<=step?'var(--accent)':'var(--border)'};margin-bottom:5px;"></div><div style="font-size:10px;color:${i===step?'var(--text)':'var(--text-dim)'};">${label}</div></div>`).join('')}</div>`;
 }
-function openLesson(id){ trackAnalytics('lesson_started', {lesson_id:id}); renderLessonStep(id,0); }
+function unfinishedLessons(){
+ return (state.lessonCheckpoints ?? []).filter(checkpoint=>{
+  const scenario=LESSON_SCENARIOS[checkpoint?.id];
+  return scenario && !state.lessonsCompleted.includes(checkpoint.id)
+   && Number.isInteger(checkpoint.step) && checkpoint.step>=0 && checkpoint.step<LESSON_STEPS.length
+   && (checkpoint.step!==2 || scenario.options[checkpoint.selectedIndex]);
+ });
+}
+function lessonProgressLabel(step){ return `Step ${step+1} of ${LESSON_STEPS.length} · ${LESSON_STEPS[step]}`; }
+function openLesson(id, trigger){
+ trigger?.focus();
+ const checkpoint=unfinishedLessons().find(item=>item.id===id);
+ trackAnalytics(checkpoint?'lesson_resumed':'lesson_started', {lesson_id:id});
+ renderLessonStep(id,checkpoint?.step ?? 0,checkpoint?.selectedIndex ?? null);
+}
 function renderLessonStep(id, step, selectedIndex=null){
  const l=LESSONS.find(x=>x.id===id);
  const scenario=LESSON_SCENARIOS[id];
  if(!l || !scenario) return;
  trackAnalytics('lesson_step_viewed', {lesson_id:id, step});
  const done=state.lessonsCompleted.includes(id);
+ if(!done){
+  const checkpoints=unfinishedLessons();
+  const latest=checkpoints[0];
+  if(latest?.id!==id || latest.step!==step || latest.selectedIndex!==selectedIndex){
+   state.lessonCheckpoints=[{id,step,selectedIndex},...checkpoints.filter(item=>item.id!==id)];
+   saveState();
+  }
+ }
  let content='';
  if(step===0){
   content=`<div class="badge purple">${l.cat} · Scenario lesson</div><h3 style="margin-top:10px;">${l.title}</h3>${lessonStepHeader(0)}<div style="border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:15px;margin:12px 0;"><div style="font-size:10px;color:var(--cyan);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">THE SITUATION</div><p style="font-size:13px;line-height:1.75;margin:0;">${scenario.scene}</p></div><p style="font-size:12px;color:var(--text-dim);line-height:1.6;">There isn't always one perfect financial decision. Think about the trade-offs and choose what you would do.</p><button class="btn primary block" onclick="renderLessonStep(${id},1)">Step 1: Make a decision →</button>`;
@@ -1737,7 +1763,7 @@ function renderLessonStep(id, step, selectedIndex=null){
  } else if(step===3){
   content=`<div class="badge purple">${l.cat} · Learn the principle</div><h3 style="margin-top:10px;">The idea behind the decision</h3>${lessonStepHeader(3)}<p style="font-size:12.5px;line-height:1.8;color:var(--text-dim);">${l.body}</p><div style="background:var(--surface);border-left:3px solid var(--cyan);border-radius:0 10px 10px 0;padding:13px;margin:14px 0;"><div style="font-size:10px;color:var(--cyan);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Remember this</div><p style="font-size:12px;line-height:1.7;margin:0;">${scenario.takeaway}</p></div><p style="font-size:12px;line-height:1.65;color:var(--text-dim);">Now test your understanding with a new question. Read the options carefully; the explanation matters more than getting it right first time.</p><button class="btn primary block" onclick="renderLessonStep(${id},4)">Try the practice challenge →</button>`;
  } else {
-  content=`<div class="badge purple">${l.cat} · Practice challenge</div><h3 style="margin-top:10px;">Can you apply what you learned?</h3>${lessonStepHeader(3)}<div id="quiz-area"><p style="font-size:12.5px;font-weight:600;line-height:1.65;">${l.quiz.q}</p>${l.quiz.options.map((o,i)=>`<button class="quiz-opt" onclick="answerQuiz(${id},${i})">${o}</button>`).join('')}</div>`;
+  content=`<div class="badge purple">${l.cat} · Practice challenge</div><h3 style="margin-top:10px;">Can you apply what you learned?</h3>${lessonStepHeader(4)}<div id="quiz-area"><p style="font-size:12.5px;font-weight:600;line-height:1.65;">${l.quiz.q}</p>${l.quiz.options.map((o,i)=>`<button class="quiz-opt" onclick="answerQuiz(${id},${i})">${o}</button>`).join('')}</div>`;
  }
  openModal(`<button class="modal-close" onclick="closeModal()">✕</button>${done?'<div class="badge green" style="margin-bottom:8px;">✓ Previously completed · Practise again</div>':''}${content}`);
 }
@@ -1766,6 +1792,7 @@ function answerQuiz(lessonId, idx){
     </div>` : '';
    if(!state.lessonsCompleted.includes(lessonId)){
     state.lessonsCompleted.push(lessonId); state.xp+=25;
+    state.lessonCheckpoints=unfinishedLessons();
     trackAnalytics('lesson_completed', {lesson_id:lessonId});
     area.insertAdjacentHTML('beforeend', `<p class="pos" style="font-size:12px; margin-top:10px;">Correct! ${l.quiz.explain}</p>${tryItRow}<button class="btn block" style="margin-top:10px;" onclick="closeModal()">Continue</button>`);
     checkFreePlay(); checkAchievements(); saveState(); renderAll();
@@ -1773,7 +1800,7 @@ function answerQuiz(lessonId, idx){
     area.insertAdjacentHTML('beforeend', `<p class="pos" style="font-size:12px; margin-top:10px;">Correct! ${l.quiz.explain}</p>${tryItRow}<button class="btn block" style="margin-top:10px;" onclick="closeModal()">Close</button>`);
    }
   } else {
-   area.insertAdjacentHTML('beforeend', `<p class="neg" style="font-size:12px; margin-top:10px;">Not quite — try again below.</p><button class="btn block" style="margin-top:10px;" onclick="openLesson(${lessonId})">Try again</button>`);
+   area.insertAdjacentHTML('beforeend', `<p class="neg" style="font-size:12px; margin-top:10px;">Not quite — try again below.</p><button class="btn block" style="margin-top:10px;" onclick="renderLessonStep(${lessonId},4)">Try again</button>`);
   }
   area.querySelector('p:last-of-type')?.setAttribute('role','status');
   area.querySelector('button:last-child')?.focus();
@@ -1831,7 +1858,10 @@ let modalLessonTrigger = null;
 function openModal(html){
  const dialog = document.getElementById('modal-root');
  const sheet = document.getElementById('modal-sheet');
- if(!dialog.open) modalLessonTrigger = document.activeElement.dataset.lesson || null;
+ if(!dialog.open){
+  const id=document.activeElement.dataset.lesson;
+  modalLessonTrigger=id ? {id,tab:currentTab} : null;
+ }
  sheet.innerHTML = html;
  const heading = sheet.querySelector('h3');
  heading.id = 'modal-title';
@@ -1845,10 +1875,14 @@ function closeModal(){
  document.getElementById('modal-root').close();
 }
 document.getElementById('modal-root').addEventListener('close', ()=>{
- if(modalLessonTrigger && !document.getElementById('modal-root').open){
-  document.querySelector(`[data-lesson="${modalLessonTrigger}"]`)?.focus();
+ if(document.getElementById('modal-root').open) return;
+ const trigger=modalLessonTrigger;
+ modalLessonTrigger=null;
+ if(state && trigger?.tab===currentTab){
+  renderTab(currentTab);
+  const panel=document.getElementById('tab-'+currentTab);
+  (panel.querySelector(`[data-lesson="${trigger.id}"]`) || panel.querySelector('#home-start-title'))?.focus();
  }
- modalLessonTrigger = null;
 });
 function skipToMain(event){
  event.preventDefault();
@@ -1943,7 +1977,13 @@ function renderTab(id){
 }
 
 /* ---------------- NEXT-STEP GUIDE (Youth + Adult) ---------------- */
-function goToLesson(id){ closeModal(); switchTab('learn'); openLesson(id); }
+function goToLesson(id){
+ closeModal(); goToLessons();
+ document.querySelector(`#tab-learn [data-lesson="${id}"]`)?.focus();
+ openLesson(id);
+}
+function goToLessons(){ learnSub='lessons'; switchTab('learn'); document.getElementById('app-main').focus(); }
+function goToBudgetTool(){ toolsSub='budget'; switchTab('tools'); document.getElementById('app-main').focus(); }
 function goToBankIsas(){ closeModal(); bankSub='isas'; switchTab('bank'); }
 function goToBankSavings(){ closeModal(); bankSub='savings'; switchTab('bank'); }
 function goToBankPension(){ closeModal(); bankSub='pension'; switchTab('bank'); }
@@ -2111,7 +2151,6 @@ function renderGuideCard(){
 
 /* ---------------- TAB INTROS ---------------- */
 const TAB_INTROS = {
- home:{ic:'🏠', title:'Your dashboard', body:"This is your home base — a quick snapshot of your money, your score, and what's worth doing next. Whenever you're not sure what to do, come back here and follow the purple card below."},
  learn:{ic:'🎓', title:'Lessons and quizzes', body:"Each lesson starts with a real-life situation, asks you to choose, explains the consequences, then gives you a short knowledge check. You can open the longer explanation when you want more detail."},
  bank:{ic:'🏦', title:'Where your money lives', body:"Pick a bank, then add money to savings, an ISA or a pension here. This is the important bit: money usually has to be sitting in an account here <b>before</b> you can do much with it elsewhere — for example, you'll need cash sitting in an ISA before you can use it to invest."},
  invest:{ic:'📈', title:'Buying shares, funds and more', body:"You can't invest straight from your everyday cash — money has to be sitting inside an ISA or investment account first. Head to the <b>Bank</b> tab, deposit some money into an ISA there, then come back here and use that money to buy shares, funds, bonds or other assets. Prices move for real, up and down, so only put in money you're OK watching wobble."},
@@ -2122,7 +2161,6 @@ const TAB_INTROS = {
  awards:{ic:'🏆', title:'Your progress', body:"Track your XP and see which achievements you’ve unlocked."},
 };
 const TAB_INTRO_SHORT = {
- home:"A quick view of your progress and the next useful action.",
  learn:"Learn through realistic choices, feedback and short challenges.",
  bank:"Manage simulated everyday money, savings, ISAs and pensions.",
  invest:"Explore long-term investing and practise short-term trading with simulated funds.",
@@ -2154,15 +2192,32 @@ function showTabIntro(id){
 }
 
 /* ---------------- HOME TAB ---------------- */
+function renderHomeActions(checkpoint){
+ const lesson=checkpoint && LESSONS.find(item=>item.id===checkpoint.id);
+ return `<section class="card" aria-labelledby="home-start-title">
+  ${lesson?`<div class="home-resume">
+   <div><h2 id="home-start-title" tabindex="-1">Continue where you left off</h2><p><strong>${lesson.title}</strong></p><p class="muted">${lessonProgressLabel(checkpoint.step)}</p></div>
+   <button type="button" class="btn primary" data-lesson="${lesson.id}" aria-haspopup="dialog" onclick="openLesson(${lesson.id},this)">Continue lesson</button>
+  </div>`:'<h2 id="home-start-title" tabindex="-1">What would you like to do?</h2>'}
+  <div class="home-actions" role="group" aria-label="Explore BasePay">
+   <button type="button" class="btn${lesson?'':' primary'}" onclick="goToLessons()">Learn about money</button>
+   <button type="button" class="btn" onclick="goToTradingDesk()">Practise trading</button>
+   <button type="button" class="btn" onclick="goToBudgetTool()">Use a calculator</button>
+  </div>
+ </section>`;
+}
 function renderHome(){
  const fhs = computeFinancialHealthScore();
  const tier = creditTierFor(state.credit.score);
  const flavor = flavorTier(state.credit.score);
  const nw = netWorth();
+ const [checkpoint] = unfinishedLessons();
  const el = document.getElementById('tab-home');
  el.innerHTML = `
-  ${renderTabIntro('home')}
-  ${renderGuideCard()}
+  ${renderHomeActions(checkpoint)}
+  ${checkpoint || !state.lessonsCompleted.length
+   ? `<details class="details-card"><summary>Get a suggested next step</summary><div class="details-content">${renderGuideCard()}</div></details>`
+   : renderGuideCard()}
   ${state.freePlay?`<div class="card tight" style="border-color:var(--amber-dim); background:var(--amber-dim);"><span class="badge amber">✨ Free Play unlocked</span> <span class="faint">${state.mode==='youth'?'Use your Junior ISA cash to practise investing. Adult products unlock at 18.':'Use your in-game cash to explore the adult simulation.'}</span></div>`:''}
   <div class="card">
    <div class="faint" style="text-transform:uppercase; letter-spacing:1px;">Your goal</div>
@@ -2275,12 +2330,14 @@ function renderLearn(){
  `;
  const body = document.getElementById('learn-body');
  if(learnSub==='lessons'){
+  const checkpoints=unfinishedLessons();
   body.innerHTML = `<div class="progress-bar purple" style="margin-bottom:12px;"><div style="width:${state.lessonsCompleted.length/LESSONS.length*100}%"></div></div>` +
    LESSONS.map(l=>{
     const done = state.lessonsCompleted.includes(l.id);
-    return `<button type="button" class="lesson-item ${done?'done':''}" data-lesson="${l.id}" aria-haspopup="dialog" onclick="openLesson(${l.id})">
+    const checkpoint=checkpoints.find(item=>item.id===l.id);
+    return `<button type="button" class="lesson-item ${done?'done':''}" data-lesson="${l.id}" aria-haspopup="dialog" onclick="openLesson(${l.id},this)">
      <span class="lesson-num" aria-hidden="true">${done?'✓':l.id}</span>
-     <span class="lesson-body"><span class="lesson-title">${l.title}</span><span class="cat">${l.cat}${l.gate?' · unlocks a feature':''}${done?' · Completed':''}</span></span>
+     <span class="lesson-body"><span class="lesson-title">${l.title}</span><span class="cat">${l.cat}${l.gate?' · unlocks a feature':''}${done?' · Completed':checkpoint?' · '+lessonProgressLabel(checkpoint.step):''}</span></span>
     </button>`;
    }).join('');
  } else if(learnSub==='glossary'){
@@ -3023,8 +3080,8 @@ function renderTradingDesk(){
  return `<div class="section-title"><h2>Trading desk</h2><span class="badge cyan">Practice only</span></div>
  <section class="card trade-desk" id="practice-trading-desk" aria-label="Practice trading desk" tabindex="-1">
   <details class="details-card" id="dt-gold-replay">
-   <summary>Guided replay · Gold before a rate announcement</summary>
-   <div class="details-content" id="dt-replay-body">${renderGoldReplay()}</div>
+   <summary>Start with a guided gold trade</summary>
+   <div class="details-content"><p>See how a UK rate announcement can change the buy and sell prices. This replay uses its own practice balance.</p><div id="dt-replay-body">${renderGoldReplay()}</div></div>
   </details>
   <div class="card-row"><b>Session ${state.tradingSession} · ${tradingTime(Math.min(state.intradayStep,TRADING_SESSION_STEPS))}</b><span class="badge gray">${sessionEnded?'Market closed':'Market open'}</span></div>
   <p class="trade-note">Trade shares, gold and fictional currencies using a separate practice wallet and simulated prices.</p>
@@ -3065,6 +3122,7 @@ function renderTradingDesk(){
    return `<div class="trade-quote"><div><b>${market.name}</b><div class="muted">Limit ${tradePrice(market,order.limit)} · ${fmt2(order.budget)} reserved</div></div><button class="btn sm" onclick="cancelDayOrder(${index})" aria-label="Cancel ${market.name} buy order at ${tradePrice(market,order.limit)}">Cancel</button></div>`;
   }).join('')}`:''}
   <h3 class="trade-note">Open positions</h3>
+  ${state.dayTrades.length?'<p class="trade-note">Positions are valued at the current sell price (bid). The buy price is higher, so the spread can put a new position slightly down even before the market moves.</p>':''}
   ${state.dayTrades.length?state.dayTrades.map(position=>{
    const market=tradingMarket(position.assetId),pnl=tradingPositionPnl(position);
    return `<div class="trade-position"><div class="trade-quote">
@@ -3498,10 +3556,10 @@ async function startGame(mode){
  buildTabBar();
  switchTab('home');
  renderAll();
- showInterfaceTour();
+ document.getElementById('home-start-title').focus();
 }
 const TOUR_STEPS = [
- {ic:'🏠', t:'Home', d:"Your dashboard. It always tells you the one next thing worth doing — just tap the button on the card to jump straight there."},
+ {ic:'🏠', t:'Home', d:"Continue your last unfinished lesson, jump to an activity or get a suggested next step."},
  {ic:'🎓', t:'Learn', d:"Each lesson gives you a situation, a decision, feedback and a quick challenge. Longer explanations remain available when you want the detail."},
  {ic:'🏦', t:'Bank', d:"Your current account, savings, ISAs and (later) pension — this is where your money actually lives and grows."},
  {ic:'📈', t:'Invest', d:"Compare long-term investments, practise day trading with a separate simulated wallet, and skip simulation time to see how events change your money."},
