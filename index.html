@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BasePay | Learn Finance Through Practice</title>
 <link rel="icon" type="image/x-icon" sizes="16x16 32x32 48x48 96x96" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/basepay-tab-32.png">
@@ -552,13 +552,118 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 .home-actions .btn{min-height:44px;white-space:normal}
 .home-resume{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .home-resume p,.home-resume h2{margin-bottom:2px}
+
+/* Responsive navigation and activity layout. */
+body{font-size:14px}
+.mode-card{color:var(--text)}
+.btn,.subtab,.quiz-opt,.tabbtn{min-height:44px}
+button:disabled{cursor:wait}
+input,select,textarea{font-size:16px}
+.card{padding:18px;margin-bottom:12px}
+.details-card{margin:12px 0}
+.details-card summary{min-height:24px}
+.section-title h2{font-family:var(--font-ui);text-transform:none;letter-spacing:0;font-size:16px;color:var(--text)}
+.topbar{flex-wrap:wrap;gap:10px;padding:14px 18px}
+.brand{font-size:16px}
+.account-controls{display:flex;align-items:center;gap:6px}
+.stat-pills{width:100%;flex-wrap:wrap;border-top:1px solid var(--border-soft);padding-top:9px}
+#bp-save-status{margin-left:auto;font-size:11px;color:var(--text-dim);max-width:100%;overflow-wrap:anywhere}
+#theme-btn-app{position:static;width:44px;height:44px}
+#app-main{padding:24px 18px 36px}
+.page-heading{margin-bottom:18px}
+.page-heading h1{font-size:26px;letter-spacing:-.8px;margin:0}
+.page-heading p{margin:4px 0 0;color:var(--text-dim);font-size:12px}
+.home-actions{gap:10px;margin-top:14px}
+.home-actions .btn{text-align:left;padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;background:var(--surface);color:var(--text);border-color:var(--border)}
+.home-actions .btn:hover{border-color:var(--accent)}
+.home-actions .btn span{font-weight:400;font-size:12px;color:var(--text-dim)}
+.home-actions .btn.primary{border-color:var(--accent)}
+.home-start{padding:22px;background:var(--bg-elevated)}
+.home-start h2{font-size:20px;letter-spacing:-.5px}
+.money-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0 20px}
+.money-overview>div{padding:14px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.money-overview dt{font-size:11px;color:var(--text-dim)}
+.money-overview dd{margin:4px 0 0;font-size:clamp(17px,3vw,23px);letter-spacing:-.5px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.home-progress{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text-dim);margin-bottom:8px}
+.lesson-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin:18px 0 12px}
+.lesson-toolbar label{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--text-dim)}
+.lesson-toolbar input[type="checkbox"]{width:18px;height:18px;accent-color:var(--accent)}
+.lesson-toolbar input[type="search"]{width:100%;margin:0}
+.lesson-item{padding:16px;gap:14px}
+.lesson-item:hover{border-color:var(--accent);background:var(--bg-elevated)}
+.lesson-body .lesson-title{font-size:14px}
+.lesson-body .cat{font-size:11px;color:var(--text-dim)}
+.lesson-num{border-radius:9px;width:34px;height:34px}
+.lesson-next{color:var(--text-dim);font-size:18px}
+.lesson-footer{display:flex;justify-content:space-between;gap:10px;padding-top:14px;border-top:1px solid var(--border-soft);margin-top:18px}
+.lesson-footer .btn{font-size:12px}
+.empty-state{text-align:center;padding:28px 16px;color:var(--text-dim)}
+.empty-state p{margin:8px 0 16px}
+.navigation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.navigation-grid .btn{justify-content:flex-start;gap:10px;text-align:left}
+.tabbar{padding-bottom:env(safe-area-inset-bottom)}
+.tabbar-inner{max-width:none}
+.tabbtn{opacity:1;color:var(--text-dim);font-size:11px;min-height:60px}
+.tabbtn.active{color:var(--accent);border-color:var(--accent);background:var(--surface)}
+.mobile-more{display:none}
+.save-preview{display:flex;justify-content:space-between;gap:12px;margin:16px 0 8px;font-size:12px;color:var(--text-dim)}
+.save-file-progress{margin:12px 0 8px}
+.bp-auth-panel{padding:28px;border-radius:22px}
+.bp-auth-panel h2{font-size:28px;letter-spacing:-.8px;margin-top:20px}
+.bp-auth-brand{font-size:21px;margin-bottom:8px}
+.bp-auth-brand img{width:38px;height:38px}
+.bp-auth-caption{line-height:1.6}
+.bp-auth-panel input{font-size:16px;min-height:48px}
+.bp-password-field{position:relative}
+.bp-password-field input{padding-right:64px}
+#bp-password-toggle{position:absolute;right:4px;top:3px;margin:0;padding:6px 10px;min-height:40px;background:transparent}
+.bp-auth-panel #bp-password-toggle{margin:0;font-size:12px}
+#bp-auth-message[data-kind="error"]{color:var(--red);border-left:3px solid var(--red);padding:10px 12px;background:var(--red-dim);border-radius:6px}
+#bp-auth-submit,#bp-auth-resend{min-height:48px}
+.bp-auth-actions button{min-height:40px}
+#bp-auth-cooldown{font-size:12px;color:var(--text-dim);min-height:18px;margin:8px 0}
+#bp-email-sent{border:1px solid var(--border);padding:18px;border-radius:12px;margin:16px 0}
+#bp-email-sent p{color:var(--text-dim);font-size:13px;line-height:1.6}
+#bp-email-destination{display:block;overflow-wrap:anywhere;color:var(--text);margin-bottom:10px}
+#bp-auth-root .footer-note{font-size:11px}
+#bp-guest-option{border-top:1px solid var(--border-soft);padding-top:16px}
+#bp-guest-notice{margin:8px 0}
+@media(max-width:699px){
+ .tabbtn:not(.mobile-primary):not(.mobile-more){display:none}
+ .mobile-more{display:flex}
+ .tabbtn{flex:1 1 0;min-width:0}
+ .wrap{max-width:100%}
+ #app{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+ .topbar{position:relative}
+ .account-controls .btn{font-size:11px;padding:8px}
+ .home-actions{grid-template-columns:1fr}
+ .home-actions .btn{padding:14px}
+ .lesson-toolbar{grid-template-columns:1fr}
+ #bp-save-status{font-size:10px}
+ .bp-auth-backdrop{padding:12px;align-items:center}
+ .bp-auth-panel{padding:24px 20px;max-height:calc(100dvh - 24px)}
+}
+@media(min-width:1000px){
+ #app{padding-left:180px}
+ .wrap{max-width:1100px}
+ .tabbar{position:fixed;top:0;bottom:0;left:max(0px,calc((100vw - 1100px)/2));width:180px;right:auto;border:0;border-right:1px solid var(--border);padding:26px 12px;display:block}
+ .tabbar-inner{display:flex;flex-direction:column;gap:5px}
+ .tabbtn{border:0;border-left:3px solid transparent;border-radius:8px;flex-direction:row;justify-content:flex-start;gap:12px;padding:12px;font-size:13px;min-height:46px}
+ .tabbtn.active{border-left-color:var(--accent)}
+ .tabbtn .ic{font-size:16px}
+ #app-main{padding:30px 32px 40px}
+ .topbar{padding:14px 26px}
+ .modal-sheet{max-width:600px;border-radius:20px;margin:24px;max-height:88vh}
+ .modal-backdrop[open]{align-items:center}
+}
+
 </style>
 <script defer src="analytics-config.js"></script>
 <script defer src="analytics.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script defer src="supabase-config.js"></script>
 <script defer src="basepay-cloud.js?v=2"></script>
-<script defer src="basepay-auth.js?v=3"></script>
+<script defer src="basepay-auth.js?v=4"></script>
 <meta name="apple-mobile-web-app-title" content="BasePay">
 <meta name="application-name" content="BasePay">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -623,11 +728,16 @@ body.bp-auth-locked .bp-auth-panel{box-shadow:none;width:min(100%,430px)}
 <div id="app" class="hide">
   <div class="topbar">
     <button type="button" class="brand" aria-label="BasePay home" onclick="goToHome()"><img src="/assets/basepay-icon-bw.svg" alt="" width="27" height="27"> BasePay</button>
-    <div class="stat-pills">
-      <span id="bp-save-status" style="font-size:10px;color:var(--text-dim)" aria-live="polite"></span><button type="button" class="btn ghost" onclick="openAesthetics()" style="font-size:11px;padding:5px 8px">Aesthetics</button><button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()" style="font-size:11px;padding:5px 8px">Sign in</button><span class="pill day" id="pill-day">Day 1</span>
+    <div class="account-controls">
+      <button type="button" class="btn ghost" onclick="openAesthetics()">Aesthetics</button>
+      <button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()">Sign in</button>
+      <button class="theme-toggle" aria-label="Help and quick tour" id="theme-btn-app" onclick="showInterfaceTour(0)" title="How does this work?">?</button>
+    </div>
+    <div class="stat-pills" aria-label="Simulation summary">
+      <span class="pill day" id="pill-day">Day 1</span>
       <span class="pill cash" id="pill-cash">£0</span>
       <span class="pill xp" id="pill-xp">0 XP</span>
-      <button class="theme-toggle" aria-label="Help and quick tour" id="theme-btn-app" onclick="showInterfaceTour(0)" title="How does this work?" style="position:static; width:26px; height:26px; font-size:12px;">❓</button>
+      <span id="bp-save-status" aria-live="polite"></span>
     </div>
   </div>
 
@@ -1189,6 +1299,7 @@ function defaultState(mode){
 
 function saveState(){
  if(!state) return;
+ state.savedAt=new Date().toISOString();
  if(window.BasePayCloud) window.BasePayCloud.enqueue(state);
 }
 function loadLegacyState(){
@@ -1748,7 +1859,7 @@ function renderLessonStep(id, step, selectedIndex=null){
   const checkpoints=unfinishedLessons();
   const latest=checkpoints[0];
   if(latest?.id!==id || latest.step!==step || latest.selectedIndex!==selectedIndex){
-   state.lessonCheckpoints=[{id,step,selectedIndex},...checkpoints.filter(item=>item.id!==id)];
+   state.lessonCheckpoints=[{id,step,selectedIndex:selectedIndex ?? checkpoints.find(item=>item.id===id)?.selectedIndex ?? null},...checkpoints.filter(item=>item.id!==id)];
    saveState();
   }
  }
@@ -1765,7 +1876,10 @@ function renderLessonStep(id, step, selectedIndex=null){
  } else {
   content=`<div class="badge purple">${l.cat} · Practice challenge</div><h3 style="margin-top:10px;">Can you apply what you learned?</h3>${lessonStepHeader(4)}<div id="quiz-area"><p style="font-size:12.5px;font-weight:600;line-height:1.65;">${l.quiz.q}</p>${l.quiz.options.map((o,i)=>`<button class="quiz-opt" onclick="answerQuiz(${id},${i})">${o}</button>`).join('')}</div>`;
  }
- openModal(`<button class="modal-close" onclick="closeModal()">✕</button>${done?'<div class="badge green" style="margin-bottom:8px;">✓ Previously completed · Practise again</div>':''}${content}`);
+ const choice=step===2 ? selectedIndex : (state.lessonCheckpoints ?? []).find(item=>item.id===id)?.selectedIndex;
+ const previousStep=step===3 && !Number.isInteger(choice) ? 1 : step-1;
+ const footer=`<div class="lesson-footer">${step>0?`<button type="button" class="btn ghost" onclick="renderLessonStep(${id},${previousStep},${choice ?? 'null'})">← Back</button>`:''}<button type="button" class="btn ghost" onclick="closeModal()">${done?'Close lesson':'Save & leave'}</button></div>`;
+ openModal(`<button class="modal-close" onclick="closeModal()">✕</button>${done?'<div class="badge green" style="margin-bottom:8px;">✓ Previously completed · Practise again</div>':''}${content}${footer}`);
 }
 function chooseLessonScenario(id, index){ renderLessonStep(id,2,index); }
 function answerQuiz(lessonId, idx){
@@ -1938,7 +2052,20 @@ let currentTab='home';
 function buildTabBar(){
  const el = document.getElementById('tabbar-inner');
  el.innerHTML = TABS.filter(t=>state.mode==='adult' || !['property','credit'].includes(t.id))
-  .map(t=>`<button type="button" class="tabbtn${t.id===currentTab?' active':''}" ${t.id===currentTab?'aria-current="page"':''} data-tab="${t.id}" onclick="switchTab('${t.id}')"><span class="ic" aria-hidden="true">${t.ic}</span>${t.label}</button>`).join('');
+  .map(t=>`<button type="button" class="tabbtn${['home','learn','bank','invest'].includes(t.id)?' mobile-primary':''}${t.id===currentTab?' active':''}" ${t.id===currentTab?'aria-current="page"':''} data-tab="${t.id}" onclick="switchTab('${t.id}')"><span class="ic" aria-hidden="true">${t.ic}</span>${t.label}</button>`).join('') + '<button type="button" class="tabbtn mobile-more" aria-haspopup="dialog" onclick="showMoreNavigation()"><span class="ic" aria-hidden="true">•••</span><span id="more-nav-label">More</span></button>';
+ updateMoreNavigation();
+}
+function updateMoreNavigation(){
+ const more=document.querySelector('.mobile-more');
+ const selected=TABS.find(tab=>tab.id===currentTab);
+ const active=!['home','learn','bank','invest'].includes(currentTab);
+ more?.classList.toggle('active',active);
+ if(more) more.setAttribute('aria-label',active ? 'More sections, current section '+selected.label : 'More sections');
+ const label=document.getElementById('more-nav-label');
+ if(label) label.textContent=active ? selected.label : 'More';
+}
+function showMoreNavigation(){
+ openModal('<button type="button" class="modal-close" onclick="closeModal()">✕</button><h3>Explore BasePay</h3><div class="navigation-grid">'+TABS.filter(tab=>!['home','learn','bank','invest'].includes(tab.id) && (state.mode==='adult' || !['credit','property'].includes(tab.id))).map(tab=>`<button type="button" class="btn" onclick="closeModal();switchTab('${tab.id}');document.getElementById('app-main').focus()"><span aria-hidden="true">${tab.ic}</span>${tab.label}</button>`).join('')+'</div>');
 }
 function switchTab(id){
  if(currentTab!==id) trackAnalytics('section_viewed', {section:id});
@@ -1951,6 +2078,7 @@ function switchTab(id){
   if(active) b.setAttribute('aria-current','page');
   else b.removeAttribute('aria-current');
  });
+ updateMoreNavigation();
  renderTab(id);
  document.getElementById('app-main').scrollTo(0,0);
 }
@@ -1974,11 +2102,14 @@ function renderTab(id){
  else if(id==='tools') renderTools();
  else if(id==='news') renderNews();
  else if(id==='awards') renderAwards();
+ const panel=document.getElementById('tab-'+id);
+ const title=id==='home' ? 'Your money, in progress.' : TABS.find(tab=>tab.id===id)?.label;
+ panel.insertAdjacentHTML('afterbegin',`<header class="page-heading"><h1>${title}</h1>${id==='home'?`<p>${state.mode==='youth'?'Youth':'Adult'} simulation · Day ${state.day}</p>`:''}</header>`);
 }
 
 /* ---------------- NEXT-STEP GUIDE (Youth + Adult) ---------------- */
 function goToLesson(id){
- closeModal(); goToLessons();
+ closeModal(); lessonQuery=''; hideCompletedLessons=false; goToLessons();
  document.querySelector(`#tab-learn [data-lesson="${id}"]`)?.focus();
  openLesson(id);
 }
@@ -2194,15 +2325,15 @@ function showTabIntro(id){
 /* ---------------- HOME TAB ---------------- */
 function renderHomeActions(checkpoint){
  const lesson=checkpoint && LESSONS.find(item=>item.id===checkpoint.id);
- return `<section class="card" aria-labelledby="home-start-title">
+ return `<section class="card home-start" aria-labelledby="home-start-title">
   ${lesson?`<div class="home-resume">
    <div><h2 id="home-start-title" tabindex="-1">Continue where you left off</h2><p><strong>${lesson.title}</strong></p><p class="muted">${lessonProgressLabel(checkpoint.step)}</p></div>
    <button type="button" class="btn primary" data-lesson="${lesson.id}" aria-haspopup="dialog" onclick="openLesson(${lesson.id},this)">Continue lesson</button>
   </div>`:'<h2 id="home-start-title" tabindex="-1">What would you like to do?</h2>'}
   <div class="home-actions" role="group" aria-label="Explore BasePay">
-   <button type="button" class="btn${lesson?'':' primary'}" onclick="goToLessons()">Learn about money</button>
-   <button type="button" class="btn" onclick="goToTradingDesk()">Practise trading</button>
-   <button type="button" class="btn" onclick="goToBudgetTool()">Use a calculator</button>
+   <button type="button" class="btn${lesson?'':' primary'}" onclick="goToLessons()">Learn about money<span>Short lessons with real-life decisions</span></button>
+   <button type="button" class="btn" onclick="goToTradingDesk()">Practise trading<span>Explore gold, shares and fictional forex</span></button>
+   <button type="button" class="btn" onclick="goToBudgetTool()">Use a calculator<span>Plan a budget or test the numbers</span></button>
   </div>
  </section>`;
 }
@@ -2214,6 +2345,11 @@ function renderHome(){
  const [checkpoint] = unfinishedLessons();
  const el = document.getElementById('tab-home');
  el.innerHTML = `
+  <dl class="money-overview" aria-label="Your simulated money">
+   <div><dt>Available cash</dt><dd>${fmt(state.cash)}</dd></div>
+   <div><dt>Net worth</dt><dd>${fmt(nw)}</dd></div>
+   <div><dt>Lessons completed</dt><dd>${state.lessonsCompleted.length}<span class="muted"> / ${LESSONS.length}</span></dd></div>
+  </dl>
   ${renderHomeActions(checkpoint)}
   ${checkpoint || !state.lessonsCompleted.length
    ? `<details class="details-card"><summary>Get a suggested next step</summary><div class="details-content">${renderGuideCard()}</div></details>`
@@ -2315,7 +2451,8 @@ function confirmTurn18(){
 
 /* ---------------- LEARN TAB ---------------- */
 let learnSub = 'lessons';
-function setLearnSub(s){ learnSub=s; renderLearn(); }
+let lessonQuery='', hideCompletedLessons=false;
+function setLearnSub(s){ learnSub=s; renderTab('learn'); }
 function renderLearn(){
  const el = document.getElementById('tab-learn');
  el.innerHTML = `
@@ -2330,16 +2467,13 @@ function renderLearn(){
  `;
  const body = document.getElementById('learn-body');
  if(learnSub==='lessons'){
-  const checkpoints=unfinishedLessons();
-  body.innerHTML = `<div class="progress-bar purple" style="margin-bottom:12px;"><div style="width:${state.lessonsCompleted.length/LESSONS.length*100}%"></div></div>` +
-   LESSONS.map(l=>{
-    const done = state.lessonsCompleted.includes(l.id);
-    const checkpoint=checkpoints.find(item=>item.id===l.id);
-    return `<button type="button" class="lesson-item ${done?'done':''}" data-lesson="${l.id}" aria-haspopup="dialog" onclick="openLesson(${l.id},this)">
-     <span class="lesson-num" aria-hidden="true">${done?'✓':l.id}</span>
-     <span class="lesson-body"><span class="lesson-title">${l.title}</span><span class="cat">${l.cat}${l.gate?' · unlocks a feature':''}${done?' · Completed':checkpoint?' · '+lessonProgressLabel(checkpoint.step):''}</span></span>
-    </button>`;
-   }).join('');
+  body.innerHTML = `<div class="home-progress"><span>Your learning progress</span><span>${state.lessonsCompleted.length} of ${LESSONS.length} completed</span></div>
+   <div class="progress-bar purple" role="progressbar" aria-label="Lessons completed" aria-valuemin="0" aria-valuemax="${LESSONS.length}" aria-valuenow="${state.lessonsCompleted.length}"><div style="width:${state.lessonsCompleted.length/LESSONS.length*100}%"></div></div>
+   <div class="lesson-toolbar"><input type="search" id="lesson-search" aria-label="Search lessons" placeholder="Search lessons or topics" oninput="lessonQuery=this.value;renderLessonList()">
+    <label><input type="checkbox" id="lesson-hide-completed" ${hideCompletedLessons?'checked':''} onchange="hideCompletedLessons=this.checked;renderLessonList()">Hide completed</label></div>
+   <p id="lesson-results-count" class="muted" role="status"></p><div id="lesson-list"></div>`;
+  document.getElementById('lesson-search').value=lessonQuery;
+  renderLessonList();
  } else if(learnSub==='glossary'){
   body.innerHTML = `<input type="text" aria-label="Search the glossary" placeholder="Search the glossary…" oninput="filterGlossary(this.value)" style="margin-bottom:10px;">
    <div id="glossary-list"></div>`;
@@ -2355,16 +2489,35 @@ function renderLearn(){
   body.innerHTML = `
    <div class="card">
     <p class="faint">Should you clear debt first, or invest instead? Enter real numbers and see it worked out.</p>
-    <div class="field"><label>Amount available</label><input type="number" id="dt-amount" value="1000"></div>
+    <div class="field"><label for="dt-amount">Amount available</label><input type="number" id="dt-amount" value="1000"></div>
     <div class="inline-field">
-     <div class="field"><label>Debt APR %</label><input type="number" id="dt-debt-apr" value="24.9"></div>
-     <div class="field"><label>Expected invest return %</label><input type="number" id="dt-invest-apr" value="5"></div>
+     <div class="field"><label for="dt-debt-apr">Debt APR %</label><input type="number" id="dt-debt-apr" value="24.9"></div>
+     <div class="field"><label for="dt-invest-apr">Expected invest return %</label><input type="number" id="dt-invest-apr" value="5"></div>
     </div>
-    <div class="field"><label>Over how many years?</label><input type="number" id="dt-years" value="3"></div>
+    <div class="field"><label for="dt-years">Over how many years?</label><input type="number" id="dt-years" value="3"></div>
     <button class="btn primary block" onclick="runDecisionTree()">Work it out</button>
     <div id="dt-result" style="margin-top:12px;"></div>
    </div>`;
  }
+}
+function renderLessonList(){
+ const query=lessonQuery.trim().toLowerCase();
+ const lessons=LESSONS.filter(lesson=>(lesson.title+' '+lesson.cat).toLowerCase().includes(query)
+  && (!hideCompletedLessons || !state.lessonsCompleted.includes(lesson.id)));
+ const checkpoints=unfinishedLessons();
+ document.getElementById('lesson-results-count').textContent=`${lessons.length} lesson${lessons.length===1?'':'s'}`;
+ document.getElementById('lesson-list').innerHTML=lessons.map(lesson=>{
+  const done=state.lessonsCompleted.includes(lesson.id);
+  const checkpoint=checkpoints.find(item=>item.id===lesson.id);
+  return `<button type="button" class="lesson-item ${done?'done':''}" data-lesson="${lesson.id}" aria-haspopup="dialog" onclick="openLesson(${lesson.id},this)">
+   <span class="lesson-num" aria-hidden="true">${done?'✓':lesson.id}</span>
+   <span class="lesson-body"><span class="lesson-title">${lesson.title}</span><span class="cat">${lesson.cat}${lesson.gate?' · Unlocks an activity':''}${done?' · Completed':checkpoint?' · '+lessonProgressLabel(checkpoint.step):''}</span></span>
+   <span class="lesson-next" aria-hidden="true">›</span>
+  </button>`;
+ }).join('') || '<div class="empty-state"><strong>No lessons match</strong><p>Try another topic or show your completed lessons.</p><button class="btn" onclick="clearLessonFilters()">Show all lessons</button></div>';
+}
+function clearLessonFilters(){
+ lessonQuery=''; hideCompletedLessons=false; renderTab('learn'); document.getElementById('lesson-search').focus();
 }
 function filterGlossary(q){
  q=q.toLowerCase();
@@ -2393,7 +2546,7 @@ function runDecisionTree(){
 
 /* ---------------- BANK TAB ---------------- */
 let bankSub = 'account';
-function setBankSub(s){ bankSub=s; renderBank(); }
+function setBankSub(s){ bankSub=s; renderTab('bank'); }
 function renderBank(){
  const el = document.getElementById('tab-bank');
  el.innerHTML = `
@@ -2440,7 +2593,7 @@ function renderBankSavings(){
   <div class="card">
    <div class="big-num pos">${fmt2(state.savings.balance)}</div>
    <div class="inline-field" style="margin-top:10px;">
-    <div class="field"><label>Amount</label><input type="number" id="sav-amt" placeholder="e.g. 100"></div>
+    <div class="field"><label for="sav-amt">Amount</label><input type="number" id="sav-amt" placeholder="e.g. 100"></div>
     <button class="btn primary" onclick="depositSavings(document.getElementById('sav-amt').value)">Deposit</button>
     <button class="btn" onclick="withdrawSavings(document.getElementById('sav-amt').value)">Withdraw</button>
    </div>
@@ -2453,7 +2606,7 @@ function renderBankSavings(){
     <p class="faint" style="margin-top:6px;">Locking gives a better rate in exchange for not being able to touch it — a real liquidity trade-off.</p>
    ` : `
     <p class="faint">Lock money away for a better rate. You give up easy access in exchange for extra interest.</p>
-    <div class="field"><label>Amount to lock</label><input type="number" id="ft-amt" placeholder="e.g. 500"></div>
+    <div class="field"><label for="ft-amt">Amount to lock</label><input type="number" id="ft-amt" placeholder="e.g. 500"></div>
     <div class="btn-row">
      <button class="btn" onclick="lockFixedTerm(document.getElementById('ft-amt').value,6)">Lock 6 months (+0.6%)</button>
      <button class="btn" onclick="lockFixedTerm(document.getElementById('ft-amt').value,12)">Lock 12 months (+1.1%)</button>
@@ -2464,7 +2617,7 @@ function renderBankSavings(){
    <div class="big-num">${fmt2(state.premiumBonds.balance)}</div>
    <p class="faint">No interest — instead, every month you're entered into a tax-free prize draw. Odds are simplified for this simulation.</p>
    <div class="inline-field">
-    <div class="field"><label>Amount</label><input type="number" id="pb-amt" placeholder="e.g. 200"></div>
+    <div class="field"><label for="pb-amt">Amount</label><input type="number" id="pb-amt" placeholder="e.g. 200"></div>
     <button class="btn primary" onclick="depositPremiumBonds(document.getElementById('pb-amt').value)">Deposit</button>
     <button class="btn" onclick="withdrawPremiumBonds(document.getElementById('pb-amt').value)">Withdraw</button>
    </div>
@@ -2483,7 +2636,7 @@ function renderBankISAs(){
     <div class="big-num pos">${fmt2(state.isa.junior.balance)}</div>
     <p class="faint">One combined wrapper for cash and investments — this is the only ISA type available under 18.</p>
     <div class="inline-field">
-     <div class="field"><label>Deposit amount</label><input type="number" id="jisa-amt" placeholder="e.g. 50"></div>
+     <div class="field"><label for="jisa-amt">Deposit amount</label><input type="number" id="jisa-amt" placeholder="e.g. 50"></div>
      <button class="btn primary" onclick="depositJuniorISA(document.getElementById('jisa-amt').value)">Deposit</button>
     </div>
     <p class="faint" style="margin-top:6px;">Use the Invest tab to buy shares, funds, bonds, REITs or crypto using this ISA's cash.</p>
@@ -2496,7 +2649,7 @@ function renderBankISAs(){
   <div class="card">
    <div class="big-num pos">${fmt2(state.isa.cash.balance)}</div>
    <div class="inline-field">
-    <div class="field"><label>Deposit</label><input type="number" id="cisa-amt" placeholder="e.g. 100"></div>
+    <div class="field"><label for="cisa-amt">Deposit</label><input type="number" id="cisa-amt" placeholder="e.g. 100"></div>
     <button class="btn primary" onclick="depositCashISA(document.getElementById('cisa-amt').value)">Deposit</button>
    </div>
    <p class="faint" style="margin-top:6px;">Tax-free interest at ${effectiveSavingsRate().toFixed(1)}%. Basic-rate payers already get £1,000/yr tax-free via the Personal Savings Allowance — an ISA matters most once you're near or above that.</p>
@@ -2507,7 +2660,7 @@ function renderBankISAs(){
    <div class="big-num pos">${fmt2(state.isa.stocks.balance)} <span class="faint" style="font-size:11px;">uninvested cash</span></div>
    <div class="faint">Invested holdings: ${fmt(totalInvestmentsValue('isaStocks'))}</div>
    <div class="inline-field" style="margin-top:8px;">
-    <div class="field"><label>Deposit into ISA cash</label><input type="number" id="sisa-amt" placeholder="e.g. 200"></div>
+    <div class="field"><label for="sisa-amt">Deposit into ISA cash</label><input type="number" id="sisa-amt" placeholder="e.g. 200"></div>
     <button class="btn primary" onclick="depositStocksISA(document.getElementById('sisa-amt').value)">Deposit</button>
    </div>
    <p class="faint" style="margin-top:6px;">Then head to the Invest tab to buy shares, funds, bonds, REITs or crypto within this ISA.</p>
@@ -2519,11 +2672,11 @@ function renderBankISAs(){
    <div class="big-num pos">${fmt2(state.isa.lifetime.balance)}</div>
    <div class="faint">£${state.lisaYearContributed}/£4,000 used this year · 25% government bonus on contributions</div>
    <div class="inline-field" style="margin-top:8px;">
-    <div class="field"><label>Contribute</label><input type="number" id="lisa-amt" placeholder="e.g. 100"></div>
+    <div class="field"><label for="lisa-amt">Contribute</label><input type="number" id="lisa-amt" placeholder="e.g. 100"></div>
     <button class="btn primary" onclick="depositLISA(document.getElementById('lisa-amt').value)">Contribute (+25%)</button>
    </div>
    <div class="inline-field" style="margin-top:8px;">
-    <div class="field"><label>Withdraw</label><input type="number" id="lisa-w-amt" placeholder="amount"></div>
+    <div class="field"><label for="lisa-w-amt">Withdraw</label><input type="number" id="lisa-w-amt" placeholder="amount"></div>
     <button class="btn" onclick="withdrawLISA(document.getElementById('lisa-w-amt').value,true)">First home / 60+</button>
     <button class="btn danger" onclick="withdrawLISA(document.getElementById('lisa-w-amt').value,false)">Other (25% penalty)</button>
    </div>`}
@@ -2534,7 +2687,7 @@ function renderBankISAs(){
    <div class="big-num pos">${fmt2(state.isa.innovative.balance)} <span class="faint" style="font-size:11px;">accrued interest</span></div>
    <p class="faint">Simplified peer-to-peer lending. Higher advertised yield — but each loan part carries a real, simulated default chance.</p>
    <div class="inline-field">
-    <div class="field"><label>Fund a loan part</label><input type="number" id="ifisa-amt" placeholder="e.g. 100"></div>
+    <div class="field"><label for="ifisa-amt">Fund a loan part</label><input type="number" id="ifisa-amt" placeholder="e.g. 100"></div>
     <button class="btn primary" onclick="buyIFISALoan(document.getElementById('ifisa-amt').value)">Fund loan</button>
    </div>
    <button class="btn sm" style="margin-top:6px;" onclick="withdrawIFISA(state.isa.innovative.balance)">Withdraw accrued interest</button>
@@ -2555,7 +2708,7 @@ function renderBankPension(){
    <div class="card-row"><span class="muted">Government tax relief</span><span class="pos">+25% of your contribution</span></div>
    <p class="faint" style="margin-top:8px;">BasePay uses relief at source. If you pay £80 from your after-tax pay, the provider adds £20 in tax relief. That makes £100 before the employer contribution.</p>
    <div class="inline-field" style="margin-top:10px;">
-    <div class="field"><label>Lump-sum top-up from cash</label><input type="number" id="pension-topup" placeholder="e.g. 100"></div>
+    <div class="field"><label for="pension-topup">Lump-sum top-up from cash</label><input type="number" id="pension-topup" placeholder="e.g. 100"></div>
     <button class="btn primary" onclick="pensionTopUp(document.getElementById('pension-topup').value)">Top up (+25%)</button>
    </div>
    <div class="faint" style="margin-top:10px;">Rough 20-year projection at 5%/yr growth: <b class="amber-t">${fmt(projected)}</b></div>
@@ -3197,7 +3350,7 @@ function renderProperty(){
    <div class="card-row"><span class="muted">Mortgage balance</span><span class="neg">${fmt(p.mortgageBalance)}</span></div>
    <div class="card-row"><span class="muted">Monthly payment</span><span>${fmt2(p.monthlyPayment)}</span></div>
    <div class="card-row"><span class="muted">Equity</span><span class="${equity>=0?'pos':'neg'}">${fmt(equity)}</span></div>
-   ${p.mortgageBalance>0? `<div class="inline-field" style="margin-top:8px;"><div class="field"><label>Overpay</label><input type="number" id="op-${p.id}" placeholder="amount"></div><button class="btn" onclick="overpayMortgage(${p.id}, document.getElementById('op-${p.id}').value)">Overpay</button></div>`:''}
+   ${p.mortgageBalance>0? `<div class="inline-field" style="margin-top:8px;"><div class="field"><label for="op-${p.id}">Overpay</label><input type="number" id="op-${p.id}" placeholder="amount"></div><button class="btn" onclick="overpayMortgage(${p.id}, document.getElementById('op-${p.id}').value)">Overpay</button></div>`:''}
    <button class="btn danger sm" style="margin-top:8px;" onclick="confirmSellProperty(${p.id})">Sell property</button>
   </div>`;
  });
@@ -3208,8 +3361,8 @@ function renderProperty(){
    <div class="card-row"><b>${l.name}</b><span class="faint">${l.location}</span></div>
    <div class="card-row"><span class="muted">Price</span><span>${fmt(l.price)}</span></div>
    <div class="inline-field" style="margin-top:8px;">
-    <div class="field"><label>Deposit %</label><input type="number" id="dep-${l.id}" value="15"></div>
-    <div class="field"><label>Term (years)</label><input type="number" id="term-${l.id}" value="25"></div>
+    <div class="field"><label for="dep-${l.id}">Deposit %</label><input type="number" id="dep-${l.id}" value="15"></div>
+    <div class="field"><label for="term-${l.id}">Term (years)</label><input type="number" id="term-${l.id}" value="25"></div>
    </div>
    <button class="btn primary block" onclick="buyPropertyUI('${l.id}')">Get mortgage & buy</button>
   </div>`;
@@ -3306,7 +3459,7 @@ function renderCredit(){
 
 /* ---------------- TOOLS TAB ---------------- */
 let toolsSub = 'budget';
-function setToolsSub(s){ toolsSub=s; renderTools(); }
+function setToolsSub(s){ toolsSub=s; renderTab('tools'); }
 function renderTools(){
  const el = document.getElementById('tab-tools');
  el.innerHTML = `
@@ -3547,6 +3700,7 @@ async function prepareNewSave(save){
 }
 async function startGame(mode){
  const save = defaultState(mode);
+ save.savedAt=new Date().toISOString();
  if(!await prepareNewSave(save)) return;
  trackAnalytics('simulator_started');
  state = save;
@@ -3598,6 +3752,10 @@ function resumeGame(saved){
  renderAll();
 }
 let showingSaveFiles = false;
+function formatSaveDate(value){
+ const date=new Date(value);
+ return value && Number.isFinite(date.getTime()) ? 'Saved '+date.toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : 'Saved progress';
+}
 function basepayLoadAccountFiles(slots){
  basepayClearForSignOut();
  const landing = document.getElementById('landing');
@@ -3606,8 +3764,9 @@ function basepayLoadAccountFiles(slots){
  document.getElementById('save-files-list').innerHTML = slots.map((save, index)=>`
   <button type="button" class="mode-card" onclick="openSaveFile(${index})">
    <span class="badge ${save?'green':'gray'}">Save file ${index+1}</span>
-   <h4>${save?'Continue simulation':'Start new simulation'}</h4>
+   <h4>${save?(save.mode==='adult'?'Adult simulation':'Youth simulation'):'Start a new simulation'}</h4>
    <p>${save?`${save.mode==='adult'?'Adult':'Youth'} Mode · Day ${Number(save.day)} · ${save.lessonsCompleted?.length ?? 0} lessons completed`:'Empty file. Choose Youth or Adult Mode.'}</p>
+   ${save?`<div class="save-file-progress progress-bar"><div style="width:${Math.min(100,(save.lessonsCompleted?.length ?? 0)/LESSONS.length*100)}%"></div></div><div class="save-preview"><span>${fmt(save.cash)} cash</span><span>${formatSaveDate(save.savedAt)}</span></div>`:''}
   </button>`).join('');
  document.getElementById('save-files-title').focus();
 }
@@ -3664,6 +3823,7 @@ function basepayClearForSignOut(){
  state = null;
  document.getElementById('tab-invest').replaceChildren();
  learnSub = 'lessons';
+ lessonQuery=''; hideCompletedLessons=false;
  bankSub = 'account';
  toolsSub = 'budget';
  document.getElementById('app').classList.add('hide');
