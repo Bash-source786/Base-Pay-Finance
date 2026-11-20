@@ -386,6 +386,7 @@
     try {
       client = window.supabase.createClient(window.BASEPAY_SUPABASE_URL,window.BASEPAY_SUPABASE_PUBLISHABLE_KEY);
       client.auth.onAuthStateChange((event,session) => {
+        const hadAccount = !!(user || activeUid || entering);
         user = session?.user || null;
         updateButtons();
         if (event === 'PASSWORD_RECOVERY') {
@@ -395,7 +396,8 @@
           return;
         }
         if (event === 'SIGNED_OUT') {
-          if (!guest) clearAccount();
+          if (hadAccount) clearAccount();
+          else enterGuestOrRequireLogin();
           return;
         }
         if (user && mode !== 'new-password') {
