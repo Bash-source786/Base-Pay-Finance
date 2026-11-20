@@ -356,8 +356,9 @@ canvas{width:100%; display:block;}
 .switch input:checked + .slider-el{background:var(--green-dim); border-color:var(--green);}
 .switch input:checked + .slider-el::before{transform:translateX(16px); background:var(--green);}
 
-.bank-card{border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:8px; background:var(--surface); cursor:pointer;}
+.bank-card{display:block; width:100%; text-align:left; font:inherit; color:inherit; border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:8px; background:var(--surface); cursor:pointer;}
 .bank-card.selected{border-color:var(--cyan); background:var(--cyan-dim);}
+.bank-protection{display:block; margin-top:6px;}
 
 /* guide card */
 .guide-card{border-left:3px solid var(--purple); padding-left:14px;}
@@ -663,8 +664,8 @@ input,select,textarea{font-size:16px}
 <script defer src="analytics.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script defer src="supabase-config.js"></script>
-<script defer src="basepay-cloud.js?v=2"></script>
-<script defer src="basepay-auth.js?v=4"></script>
+<script defer src="basepay-cloud.js?v=3"></script>
+<script defer src="basepay-auth.js?v=5"></script>
 <meta name="apple-mobile-web-app-title" content="BasePay">
 <meta name="application-name" content="BasePay">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -702,6 +703,7 @@ input,select,textarea{font-size:16px}
     <button type="button" id="back-to-save-files" class="btn ghost hide" onclick="showSaveFiles()">← Back to save files</button>
     <h3 id="mode-title" tabindex="-1">Choose your starting point</h3>
     <p id="mode-error" role="alert"></p>
+    <button type="button" id="guest-start-fresh" class="btn hide" onclick="confirmResetGuestProgress()">Start fresh</button>
     <details class="details-card"><summary>What will I do inside BasePay?</summary><div class="details-content">You will work through short scenarios, choose what to do, see the consequences, then try the idea in a simulator. You can explore pay, budgeting, saving, credit, investing, trading and property. Everything uses simulated money and simplified examples; it is not financial advice.</div></details>
     <div class="mode-cards">
       <button class="mode-card" onclick="startGame('youth')">
@@ -1298,6 +1300,20 @@ function defaultState(mode){
  };
 }
 
+function basepayIsGuestSave(save){
+ const record = value => value && typeof value === 'object' && !Array.isArray(value);
+ return BANKS.some(bank=>bank.id===save.bankId)
+  && Number.isFinite(save.cash) && Number.isFinite(save.xp)
+  && [save.lessonsCompleted,save.investments,save.properties,save.applications,save.netWorthHistory,
+   save.news,save.achievements,save.credit?.bnpl,save.premiumBonds?.wins,save.isa?.innovative?.loans].every(Array.isArray)
+  && [save.assetPrices,save.priceHistory,save.credit].every(record)
+  && (save.lessonCheckpoints == null || Array.isArray(save.lessonCheckpoints))
+  && [save.investments,save.properties,save.netWorthHistory,save.news,save.credit.bnpl,
+   save.isa.innovative.loans].every(items=>items.every(record))
+  && [save.savings,save.pension,save.gia,save.premiumBonds,save.isa?.cash,save.isa?.stocks,
+   save.isa?.lifetime,save.isa?.innovative,save.isa?.junior].every(account=>Number.isFinite(account?.balance));
+}
+
 function saveState(){
  if(!state) return;
  state.savedAt=new Date().toISOString();
@@ -1634,7 +1650,13 @@ function sellAsset(assetId, wrapper, amount){
 /* ---------------- BANK / SAVINGS / PREMIUM BONDS ---------------- */
 function bankOf(){ return BANKS.find(b=>b.id===state.bankId); }
 function effectiveSavingsRate(){ return bankOf().rate + (state.lessonsCompleted.includes(3) ? 0.3 : 0); }
-function switchBank(id){ state.bankId=id; saveState(); renderAll(); toast(`Switched to ${BANKS.find(b=>b.id===id).name}.`); }
+function switchBank(id){
+ if(state.bankId===id) return;
+ state.bankId=id;
+ saveState(); renderAll();
+ document.getElementById('bank-choice-'+id)?.focus();
+ toast(`Switched to ${BANKS.find(b=>b.id===id).name}.`);
+}
 function depositSavings(amount){ amount=Number(amount); if(!amount||amount<=0||amount>state.cash){toast('Enter a valid amount you have available.','warn');return;} state.cash-=amount; state.savings.balance+=amount; checkAchievements(); saveState(); renderAll(); }
 function withdrawSavings(amount){ amount=Number(amount); if(!amount||amount<=0||amount>state.savings.balance){toast('Not enough in savings.','warn');return;} state.savings.balance-=amount; state.cash+=amount; saveState(); renderAll(); }
 function lockFixedTerm(amount, months){
@@ -1723,6 +1745,12 @@ function toggleShariah(){
   }
  }
  saveState(); renderAll();
+ if(state.shariah){
+  document.getElementById('home-settings-title')?.focus();
+  toast('Shariah-compliant mode is on. You can turn it off in Bank → Account.');
+ } else {
+  document.getElementById('bank-choice-'+state.bankId)?.focus();
+ }
 }
 function toggleElectoralRoll(){
  if(!state.electoralRoll){ state.electoralRoll=true; state.credit.score=Math.min(999,state.credit.score+12); toast('Registered on the electoral roll — a small, permanent credit score boost applied.'); }
@@ -1737,8 +1765,10 @@ function setBudget(bills,fun,growth){
 }
 
 /* ---------------- CREDIT PRODUCTS ---------------- */
-function creditGateOK(){ return state.lessonsCompleted.includes(4) && state.lessonsCompleted.includes(5); }
+function adultToolsAvailable(){ return state?.mode==='adult'; }
+function creditGateOK(){ return adultToolsAvailable() && state.lessonsCompleted.includes(4) && state.lessonsCompleted.includes(5); }
 function applyCreditCard(){
+ if(!adultToolsAvailable()) return;
  if(!creditGateOK()){ toast("Complete 'How Interest Really Works' and 'Credit Scores Explained' first.",'warn'); return; }
  if(state.credit.card){ toast('You already have a credit card.','warn'); return; }
  const tier = creditTierFor(state.credit.score);
@@ -1749,6 +1779,7 @@ function applyCreditCard(){
  toast(`Approved: ${tier.label} tier card, £${tier.cardLimit.toLocaleString()} limit at ${tier.cardApr}% APR.`);
 }
 function spendOnCard(amount){
+ if(!adultToolsAvailable()) return;
  amount=Number(amount);
  if(!state.credit.card){toast('You need a credit card first.','warn'); return;}
  if(!amount||amount<=0){toast('Enter an amount.','warn'); return;}
@@ -1757,6 +1788,7 @@ function spendOnCard(amount){
  saveState(); renderAll();
 }
 function payCardBalance(amount){
+ if(!adultToolsAvailable()) return;
  amount=Number(amount);
  if(!state.credit.card||!amount||amount<=0||amount>state.cash){toast('Enter a valid amount.','warn'); return;}
  const pay = Math.min(amount, state.credit.card.balance);
@@ -1778,6 +1810,7 @@ function applyLoan(amount, termMonths){
  toast(`Loan approved: £${amount.toLocaleString()} at ${tier.loanApr}% APR, £${monthlyPayment.toFixed(2)}/month.`);
 }
 function payLoanExtra(amount){
+ if(!adultToolsAvailable()) return;
  amount=Number(amount);
  if(!state.credit.loan||!amount||amount<=0||amount>state.cash){toast('Enter a valid amount.','warn'); return;}
  state.cash-=amount; state.credit.loan.balance-=amount;
@@ -1796,7 +1829,7 @@ function makeBNPLPurchase(total){
 }
 
 /* ---------------- PROPERTY ---------------- */
-function propertyGateOK(){ return state.mode==='adult' && state.lessonsCompleted.includes(9); }
+function propertyGateOK(){ return adultToolsAvailable() && state.lessonsCompleted.includes(9); }
 function buyProperty(listingId, depositPct, termYears){
  if(!propertyGateOK()){ toast("Complete 'Mortgages & Leverage' first (Adult Mode only).",'warn'); return; }
  const listing = PROPERTY_LISTINGS.find(l=>l.id===listingId);
@@ -1812,6 +1845,7 @@ function buyProperty(listingId, depositPct, termYears){
  toast(`Bought ${listing.name} — £${monthlyPayment.toFixed(2)}/month mortgage at ${tier.mortgageApr}%.`);
 }
 function overpayMortgage(propId, amount){
+ if(!adultToolsAvailable()) return;
  amount=Number(amount);
  const p = state.properties.find(x=>x.id===propId);
  if(!p||!amount||amount<=0||amount>state.cash){toast('Enter a valid amount.','warn'); return;}
@@ -1821,6 +1855,7 @@ function overpayMortgage(propId, amount){
  toast(`Overpaid £${amount.toLocaleString()} off the mortgage on ${p.name}.`);
 }
 function sellProperty(propId){
+ if(!adultToolsAvailable()) return;
  const p = state.properties.find(x=>x.id===propId);
  if(!p) return;
  const proceeds = p.value - p.mortgageBalance;
@@ -1940,7 +1975,7 @@ function turn18(){
  buildTabBar();
  addNews('sector', "Turn 18: your Junior ISA has automatically become a Stocks & Shares ISA — that's what happens in real life too.");
  saveState(); renderAll();
- toast('Happy 18th! Your Junior ISA is now a Stocks & Shares ISA, and every Adult Mode feature is unlocked.','ach');
+ toast('Happy 18th! Your Junior ISA is now a Stocks & Shares ISA. Adult tools are now available.','ach');
 }
 
 /* ---------------- ACHIEVEMENTS ---------------- */
@@ -2140,15 +2175,15 @@ function youthNextStep(){
  const jisaCash = state.isa.junior.balance;
  const jisaInvested = totalInvestmentsValue('junior');
 
- if(state.lessonsCompleted.length===0){
-  return {title:"Start with your first lesson",
-   text:`You've got ${fmt(idleCash)} of pocket money sitting as cash. Before doing anything with it, learn what's actually going on with it — it takes two minutes.`,
-   cta:"Start 'Reading Your Payslip'", action:'goToLesson(1)'};
- }
  if(!done(2)){
   return {title:"Give your money a job",
-   text:"You know what your income is now. Next, learn how to plan where each pound goes — then you can set a simple budget in Tools.",
+   text:"Start by deciding what to spend and what to save. Then try setting a simple budget in Tools.",
    cta:"Do 'Give Every Pound a Job'", action:'goToLesson(2)'};
+ }
+ if(!done(1)){
+  return {title:"Learn where take-home pay comes from",
+   text:"Now that you’ve planned how to use your money, see what changes when you start getting paid for a job.",
+   cta:"Do 'Reading Your Payslip'", action:'goToLesson(1)'};
  }
  if(idleCash>=10 && jisaCash < idleCash*1.5){
   return {title:"Move some cash into your Junior ISA",
@@ -2310,7 +2345,7 @@ function renderTabIntro(id){
  return `<div class="card intro-card">
   <div class="intro-label">${info.ic} ${info.title}</div>
   <p style="font-size:12.5px;color:var(--text-dim);line-height:1.55;margin-bottom:6px;">${TAB_INTRO_SHORT[id]||'Explore this section at your own pace.'}</p>
-  <details class="details-card"><summary>How this section works</summary><div class="details-content">${info.body}</div></details>
+  <details class="details-card"><summary>How this section works</summary><div class="details-content">${id==='tools' && !adultToolsAvailable() ? 'Plan a budget, track ISA contributions and explore long-term growth. The mortgage and card payoff calculators unlock at 18.' : info.body}</div></details>
   <button class="btn block" style="margin-top:8px;" onclick="dismissTabIntro('${id}')">Got it</button>
  </div>`;
 }
@@ -2396,13 +2431,14 @@ function renderHome(){
    <p class="faint">When you're ready, turning 18 converts your Junior ISA into an adult Stocks &amp; Shares ISA and unlocks the full game.</p>
    <button class="btn primary block" onclick="confirmTurn18()">🎂 Turn 18</button>
   </div>` : ''}
-  <div class="section-title"><h2>Settings</h2></div>
+  <div class="section-title"><h2 id="home-settings-title" tabindex="-1">Settings</h2></div>
   <div class="card">
    ${state.mode==='adult'? `<div class="toggle-row"><span id="plan-2-label">I have a Plan 2 student loan</span><label class="switch"><input type="checkbox" aria-labelledby="plan-2-label" aria-describedby="plan-2-help" ${state.studentLoan?'checked':''} onchange="toggleStudentLoan()"><span class="slider-el"></span></label></div>
    <p id="plan-2-help" class="faint">Applies from your next payday. The April 2026 threshold is ${fmt(PLAN_2_ANNUAL_THRESHOLD)} a year. BasePay shows the estimate to the penny. UK payroll rounds down to whole pounds.</p>` : ''}
    ${window.BasePayCloud?.userId()
      ? '<button type="button" class="btn" onclick="showSaveFiles()">Switch save file</button>'
      : '<button type="button" class="btn" onclick="confirmResetGuestProgress()">Reset guest progress</button>'}
+   ${state.shariah?'':'<button type="button" class="btn ghost" onclick="toggleShariah()">Enable Shariah-compliant mode</button>'}
   </div>
  `;
  drawLineChart(document.getElementById('nw-chart'), state.netWorthHistory.map(p=>p.value), '#3ddc97');
@@ -2446,14 +2482,14 @@ function resetGuestProgress(){
 function confirmTurn18(){
  openModal(`<button class="modal-close" onclick="closeModal()">✕</button>
  <h3>Turn 18?</h3>
- <p class="faint">Your Junior ISA becomes a Stocks &amp; Shares ISA, Adult Mode unlocks fully, and your credit score starts fresh at 640 — a short history, not a bad one.</p>
- <div class="btn-row"><button class="btn ghost" onclick="closeModal()">Not yet</button><button class="btn primary" onclick="turn18(); closeModal();">Yes, turn 18</button></div>`);
+ <p class="faint">Your Junior ISA becomes a Stocks &amp; Shares ISA. Adult tools become available, and any lesson requirements still apply. You keep your lesson progress and XP, and your credit score starts at 640.</p>
+ <div class="btn-row"><button class="btn ghost" onclick="closeModal()">Not yet</button><button class="btn primary" onclick="turn18(); closeModal(); document.getElementById('app-main').focus();">Yes, turn 18</button></div>`);
 }
 
 /* ---------------- LEARN TAB ---------------- */
 let learnSub = 'lessons';
 let lessonQuery='', hideCompletedLessons=false;
-function setLearnSub(s){ learnSub=s; renderTab('learn'); }
+function setLearnSub(s){ learnSub=s; renderTab('learn'); document.querySelector('#tab-learn .subtab.active')?.focus(); }
 function renderLearn(){
  const el = document.getElementById('tab-learn');
  el.innerHTML = `
@@ -2503,7 +2539,10 @@ function renderLearn(){
 }
 function renderLessonList(){
  const query=lessonQuery.trim().toLowerCase();
- const lessons=LESSONS.filter(lesson=>(lesson.title+' '+lesson.cat).toLowerCase().includes(query)
+ // Change the display order for Youth without changing the IDs used by saves.
+ const ordered = state.mode==='youth'
+  ? [LESSONS.find(lesson=>lesson.id===2), ...LESSONS.filter(lesson=>lesson.id!==2)] : LESSONS;
+ const lessons=ordered.filter(lesson=>(lesson.title+' '+lesson.cat).toLowerCase().includes(query)
   && (!hideCompletedLessons || !state.lessonsCompleted.includes(lesson.id)));
  const checkpoints=unfinishedLessons();
  document.getElementById('lesson-results-count').textContent=`${lessons.length} lesson${lessons.length===1?'':'s'}`;
@@ -2511,7 +2550,7 @@ function renderLessonList(){
   const done=state.lessonsCompleted.includes(lesson.id);
   const checkpoint=checkpoints.find(item=>item.id===lesson.id);
   return `<button type="button" class="lesson-item ${done?'done':''}" data-lesson="${lesson.id}" aria-haspopup="dialog" onclick="openLesson(${lesson.id},this)">
-   <span class="lesson-num" aria-hidden="true">${done?'✓':lesson.id}</span>
+   <span class="lesson-num" aria-hidden="true">${done?'✓':ordered.indexOf(lesson)+1}</span>
    <span class="lesson-body"><span class="lesson-title">${lesson.title}</span><span class="cat">${lesson.cat}${lesson.gate?' · Unlocks an activity':''}${done?' · Completed':checkpoint?' · '+lessonProgressLabel(checkpoint.step):''}</span></span>
    <span class="lesson-next" aria-hidden="true">›</span>
   </button>`;
@@ -2547,7 +2586,7 @@ function runDecisionTree(){
 
 /* ---------------- BANK TAB ---------------- */
 let bankSub = 'account';
-function setBankSub(s){ bankSub=s; renderTab('bank'); }
+function setBankSub(s){ bankSub=s; renderTab('bank'); document.querySelector('#tab-bank .subtab.active')?.focus(); }
 function renderBank(){
  const el = document.getElementById('tab-bank');
  el.innerHTML = `
@@ -2570,22 +2609,25 @@ function renderBankAccount(){
  return `
   <div class="section-title"><h2>Choose your bank</h2></div>
   ${BANKS.map(b=>`
-   <div class="bank-card ${state.bankId===b.id?'selected':''}" onclick="switchBank('${b.id}')">
-    <div class="card-row"><span>${b.icon} <b>${b.name}</b></span>${state.bankId===b.id?'<span class="badge cyan">Active</span>':''}</div>
-    <div class="card-row" style="margin-top:6px;"><span class="faint">Monthly fee</span><span class="faint">${b.fee===0?'Free':fmt(b.fee)}</span></div>
-    <div class="card-row"><span class="faint">Savings rate</span><span class="faint pos">${b.rate}%</span></div>
-    <div class="card-row"><span class="faint">Overdraft</span><span class="faint">${fmt(b.od)} at ${b.odApr}% APR</span></div>
-    <div class="card-row"><span class="faint">Perk</span><span class="faint">${b.perk}</span></div>
-    <div style="margin-top:6px;"><span class="badge green">FSCS protected up to £120,000</span></div>
-   </div>`).join('')}
+   <button type="button" id="bank-choice-${b.id}" class="bank-card ${state.bankId===b.id?'selected':''}" aria-labelledby="bank-name-${b.id}" aria-describedby="bank-details-${b.id}" aria-pressed="${state.bankId===b.id}" onclick="switchBank('${b.id}')">
+    <span class="card-row"><span><span aria-hidden="true">${b.icon}</span> <b id="bank-name-${b.id}">${b.name}</b></span>${state.bankId===b.id?'<span class="badge cyan" aria-hidden="true">Active</span>':''}</span>
+    <span id="bank-details-${b.id}">
+     <span class="card-row" style="margin-top:6px;"><span class="faint">Monthly fee</span><span class="faint">${b.fee===0?'Free':fmt(b.fee)}</span></span>
+     <span class="card-row"><span class="faint">Savings rate</span><span class="faint pos">${b.rate}%</span></span>
+     <span class="card-row"><span class="faint">Overdraft</span><span class="faint">${fmt(b.od)} at ${b.odApr}% APR</span></span>
+     <span class="card-row"><span class="faint">Perk</span><span class="faint">${b.perk}</span></span>
+     <span class="bank-protection"><span class="badge green">FSCS protected up to £120,000</span></span>
+    </span>
+   </button>`).join('')}
+  ${state.shariah?`
   <div class="section-title"><h2>Shariah-compliant mode</h2></div>
   <div class="card">
    <div class="toggle-row" style="border:none; padding:0;">
     <span>Replace interest with profit-rate framing; filter conventional holdings</span>
-    <label class="switch"><input type="checkbox" ${state.shariah?'checked':''} onchange="toggleShariah()"><span class="slider-el"></span></label>
+    <label class="switch"><input type="checkbox" aria-label="Shariah-compliant account mode" aria-describedby="shariah-help" checked onchange="toggleShariah()"><span class="slider-el"></span></label>
    </div>
-   <p class="faint" style="margin-top:8px;">When on, Bank and Invest copy switches to profit-rate language, Finance-sector shares and the conventional Bond fund are filtered out, and a Sukuk Income Fund is offered instead. See the Glossary for Murabaha, Sukuk and profit-sharing.</p>
-  </div>`;
+   <p id="shariah-help" class="faint" style="margin-top:8px;">When on, Bank and Invest copy switches to profit-rate language, Finance-sector shares and the conventional Bond fund are filtered out, and a Sukuk Income Fund is offered instead. See the Glossary for Murabaha, Sukuk and profit-sharing.</p>
+  </div>`:''}`;
 }
 function renderBankSavings(){
  const b = bankOf();
@@ -3371,11 +3413,13 @@ function renderProperty(){
  el.innerHTML = html;
 }
 function buyPropertyUI(listingId){
+ if(!adultToolsAvailable()) return;
  const dep = document.getElementById('dep-'+listingId).value;
  const term = document.getElementById('term-'+listingId).value;
  buyProperty(listingId, Number(dep), Number(term));
 }
 function confirmSellProperty(id){
+ if(!adultToolsAvailable()) return;
  const p = state.properties.find(x=>x.id===id);
  openModal(`<button class="modal-close" onclick="closeModal()">✕</button><h3>Sell ${p.name}?</h3>
  <p class="faint">You'll receive the current value minus any remaining mortgage balance.</p>
@@ -3460,18 +3504,27 @@ function renderCredit(){
 
 /* ---------------- TOOLS TAB ---------------- */
 let toolsSub = 'budget';
-function setToolsSub(s){ toolsSub=s; renderTab('tools'); }
+function isAdultCalculator(sub){ return sub==='mortgage' || sub==='payoff'; }
+function setToolsSub(s){
+ toolsSub=s;
+ renderTab('tools');
+ document.querySelector('#tab-tools .subtab.active')?.focus();
+}
 function renderTools(){
  const el = document.getElementById('tab-tools');
+ const adult = adultToolsAvailable();
+ const lockedRoute = !adult && isAdultCalculator(toolsSub);
+ if(lockedRoute) toolsSub='budget';
  el.innerHTML = `
   ${renderTabIntro('tools')}
   <div class="subtabs">
    <button class="subtab ${toolsSub==='budget'?'active':''}" onclick="setToolsSub('budget')">Budget</button>
    <button class="subtab ${toolsSub==='isa'?'active':''}" onclick="setToolsSub('isa')">ISA Tracker</button>
    <button class="subtab ${toolsSub==='growth'?'active':''}" onclick="setToolsSub('growth')">Growth Calc</button>
-   <button class="subtab ${toolsSub==='mortgage'?'active':''}" onclick="setToolsSub('mortgage')">Mortgage Calc</button>
-   <button class="subtab ${toolsSub==='payoff'?'active':''}" onclick="setToolsSub('payoff')">Card Payoff</button>
+   ${adult?`<button class="subtab ${toolsSub==='mortgage'?'active':''}" onclick="setToolsSub('mortgage')">Mortgage Calc</button>
+   <button class="subtab ${toolsSub==='payoff'?'active':''}" onclick="setToolsSub('payoff')">Card Payoff</button>`:''}
   </div>
+  ${lockedRoute?'<p class="lock-row" role="status">Mortgage and card payoff calculators unlock at age 18.</p>':''}
   <div id="tools-body"></div>`;
  const body = document.getElementById('tools-body');
  if(toolsSub==='budget') body.innerHTML = renderBudgetTool();
@@ -3548,6 +3601,7 @@ function renderMortgageTool(){
  </div>`;
 }
 function runMortgageCalc(){
+ if(!adultToolsAvailable() || !document.getElementById('mc-result')) return;
  const price=Number(document.getElementById('mc-price').value)||0;
  const depositPct=Number(document.getElementById('mc-deposit').value)||0;
  const rate=Number(document.getElementById('mc-rate').value)||0;
@@ -3575,6 +3629,7 @@ function renderPayoffTool(){
  </div>`;
 }
 function runPayoffCalc(){
+ if(!adultToolsAvailable() || !document.getElementById('pc-result')) return;
  let balance=Number(document.getElementById('pc-balance').value)||0;
  const apr=Number(document.getElementById('pc-apr').value)||0;
  const minPct=Number(document.getElementById('pc-minpct').value)||3;
@@ -3807,9 +3862,12 @@ function openSaveFile(index){
  }
 }
 // Guest progress uses its own browser-only save, never an account's cache.
-function basepayLoadGuestSave(saved){
+function basepayLoadGuestSave({save, issue, damaged}){
  basepayClearForSignOut();
- if(saved && saved.day && saved.mode) resumeGame(saved);
+ if(save) { resumeGame(save); return; }
+ if(issue) document.getElementById('mode-error').textContent = damaged
+  ? issue+' You can start fresh or explore temporarily without saving.' : issue;
+ document.getElementById('guest-start-fresh').classList.toggle('hide', !damaged);
 }
 async function basepayImportOldSave(){
  const previous = loadLegacyState();
@@ -3831,6 +3889,7 @@ function basepayClearForSignOut(){
  document.getElementById('landing').classList.remove('hide','choosing-save');
  document.getElementById('save-files').classList.add('hide');
  document.getElementById('back-to-save-files').classList.add('hide');
+ document.getElementById('guest-start-fresh').classList.add('hide');
  document.getElementById('mode-error').textContent = '';
 }
 window.addEventListener('DOMContentLoaded', ()=>{

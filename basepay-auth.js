@@ -118,7 +118,9 @@
     document.body.classList.add('bp-auth-locked');
     showPanel();
     setMode('signin');
-    if (note) message(note, 'error');
+    const {damaged, issue} = window.BasePayCloud.readGuestSave();
+    const notice = [note, damaged ? issue : ''].filter(Boolean).join(' ');
+    if (notice) message(notice, 'error');
   }
   function allowAccess() {
     document.body.classList.remove('bp-auth-locked');
@@ -227,10 +229,11 @@
     generation++;
     guest = true;
     try { window.basepayAnalyticsUser?.(null); } catch (_) {}
-    const saved = window.BasePayCloud.activateGuest();
-    window.basepayLoadGuestSave(saved);
+    const result = window.BasePayCloud.activateGuest();
+    window.basepayLoadGuestSave(result);
     updateButtons();
     allowAccess();
+    $(result.save ? 'app-main' : 'mode-title').focus();
   }
   function setPasswordVisible(visible) {
     const input = $('bp-auth-password'), toggle = $('bp-password-toggle');
@@ -370,11 +373,16 @@
         'Could not load your account progress. '+ (error.message || 'Please try again.'));
     }).finally(()=>{ entering = null; });
   }
+  function enterGuestOrRequireLogin(note) {
+    if (user || mode === 'new-password') return;
+    if (window.BasePayCloud.readGuestSave().save) continueAsGuest();
+    else requireLogin(note);
+  }
   function init() {
     if (window.BasePayCloud.takeGuestRestart()) continueAsGuest();
     updateButtons();
-    if (!configured()) { requireLogin('Sign-in configuration is unavailable. Please contact BasePay support.'); return; }
-    if (!window.supabase || !window.supabase.createClient) { console.warn('BasePay: Supabase client failed to load'); requireLogin('Sign-in service could not load. Please refresh this page.'); return; }
+    if (!configured()) { enterGuestOrRequireLogin('Sign-in configuration is unavailable. Please contact BasePay support.'); return; }
+    if (!window.supabase || !window.supabase.createClient) { console.warn('BasePay: Supabase client failed to load'); enterGuestOrRequireLogin('Sign-in service could not load. Please refresh this page.'); return; }
     try {
       client = window.supabase.createClient(window.BASEPAY_SUPABASE_URL,window.BASEPAY_SUPABASE_PUBLISHABLE_KEY);
       client.auth.onAuthStateChange((event,session) => {
@@ -387,7 +395,7 @@
           return;
         }
         if (event === 'SIGNED_OUT') {
-          clearAccount();
+          if (!guest) clearAccount();
           return;
         }
         if (user && mode !== 'new-password') {
@@ -397,15 +405,15 @@
       });
       client.auth.getUser().then(({data,error}) => {
         if (error || !data.user) {
-          if (!user) requireLogin();
+          enterGuestOrRequireLogin();
         } else {
           user = data.user;
           updateButtons();
           if (mode !== 'new-password') enterAccount(user);
         }
-      }).catch(() => requireLogin('Unable to verify your session. Please sign in.'));
+      }).catch(() => enterGuestOrRequireLogin('Unable to verify your session. Please sign in.'));
 
-    } catch (e) { console.warn('BasePay: Could not initialize authentication',e); requireLogin('Sign-in could not start. Please refresh this page.'); }
+    } catch (e) { console.warn('BasePay: Could not initialize authentication',e); enterGuestOrRequireLogin('Sign-in could not start. Please refresh this page.'); }
   }
   document.addEventListener('keydown',event=>{
     const root=$('bp-auth-root');

@@ -17,14 +17,23 @@
     el.textContent = label;
     el.style.color = error ? 'var(--red)' : 'var(--text-dim)';
   }
+  function readGuestSave() {
+    let raw;
+    try { raw = localStorage.getItem(guestKey); }
+    catch (_) { return { issue: 'Browser storage is unavailable. Guest progress cannot be saved.' }; }
+    if (raw === null) return {};
+    try {
+      const save = JSON.parse(raw);
+      if (isSave(save) && window.basepayIsGuestSave(save)) return { save };
+    } catch (_) {}
+    return { issue: 'Your guest save could not be read. It is still stored in this browser.', damaged: true };
+  }
   function activateGuest() {
     logout();
     guest = true;
-    status('Guest — this browser only');
-    try {
-      const save = JSON.parse(localStorage.getItem(guestKey) || 'null');
-      return isSave(save) ? save : null;
-    } catch (_) { return null; }
+    const result = readGuestSave();
+    status(result.issue || 'Guest — this browser only', !!result.issue);
+    return result;
   }
   function resetGuest() {
     if (!guest) throw new Error('Guest access required.');
@@ -113,6 +122,12 @@
   function enqueue(save) {
     if (!save) return;
     if (guest) {
+      const {issue, damaged} = readGuestSave();
+      if (damaged) {
+        status('Guest — temporary progress. The unreadable save is still stored in this browser.', true);
+        return;
+      }
+      if (issue) { status(issue, true); return; }
       try {
         localStorage.setItem(guestKey, JSON.stringify(save));
         status('Guest — saved in this browser only');
@@ -195,6 +210,6 @@
   });
   window.BasePayCloud = {
     activate, activateGuest, enqueue, flush, beforeSignOut: flushPending, logout,
-    listFiles, selectFile, createFile, resetGuest, takeGuestRestart, userId: () => account?.userId,
+    listFiles, selectFile, createFile, readGuestSave, resetGuest, takeGuestRestart, userId: () => account?.userId,
   };
 })();
