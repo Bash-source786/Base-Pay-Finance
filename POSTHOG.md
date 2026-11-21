@@ -6,7 +6,7 @@ Set `POSTHOG_PROJECT_TOKEN` to the public project token and `POSTHOG_HOST` to th
 
 For local builds, copy `.env.example` to `.env`, fill the values, run `node --env-file=.env scripts/build.mjs` and serve `dist` over HTTP. Never commit `.env` or use a personal API key. The public project token is expected to appear in the browser build.
 
-Direct source deployments (including GitHub Pages branch deployments) continue working with analytics disabled. Deploy generated `dist` to activate analytics. A build with missing or invalid PostHog settings logs a warning and keeps the site available with analytics disabled.
+The current source deployment serves the generated public `analytics-config.js` at the repository root. That file enables analytics on the BasePay production domain only. If you switch to the Cloudflare build command, set the two production environment variables above so the generated `dist` configuration is populated. A build with missing or invalid PostHog settings logs a warning and serves the site with analytics disabled.
 
 ## Events and privacy
 The SDK only loads after Allow analytics. Analytics preferences lets visitors withdraw consent. Events before consent are discarded. Autocapture, session replay and surveys are disabled. No financial values, saved-game contents, names or free-text answers are sent as custom properties. After sign-in or session restoration, the verified account UUID identifies consenting users across devices. Email, passwords and auth tokens are never sent. Logout and account switching reset the analytics identity. Consent is a per-browser choice.
