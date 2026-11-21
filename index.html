@@ -659,6 +659,34 @@ input,select,textarea{font-size:16px}
  .modal-backdrop[open]{align-items:center}
 }
 
+/* First-time practice */
+.practice-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--surface-2);border-color:var(--accent)}
+.practice-entry p,.practice-instruction{margin:0;color:var(--text-dim)}
+.practice-header{padding-right:36px}
+.practice-header p{margin:0 0 4px;color:var(--text-dim);font-size:12px}
+.practice-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin:14px 0 10px;padding:0;list-style:none}
+.practice-tabs li{padding:6px 2px;border:1px solid transparent;border-radius:8px;text-align:center;color:var(--text-dim);font-size:11px}
+.practice-tabs li[aria-current="step"]{background:var(--surface-2);border-color:var(--accent);color:var(--text);font-weight:700}
+.practice-tabs li span{display:block;font-size:16px}
+.practice-stage{padding:14px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);display:grid;gap:12px}
+.practice-stage h4,.practice-stage p{margin:0}
+.practice-stage .btn-row{flex-wrap:wrap}
+.practice-balances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
+.practice-balances div{padding:10px;background:var(--surface-2);border-radius:var(--radius-sm)}
+.practice-balances dt{color:var(--text-dim);font-size:12px}
+.practice-balances dd{margin:3px 0 0;font-size:21px;font-weight:700;font-family:var(--font-mono)}
+.practice-feedback{padding:9px 11px;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:4px}
+.practice-feedback:empty{display:none}
+.practice-chart{display:grid;gap:6px;margin:0}
+.practice-chart div{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:8px}
+.practice-chart dd{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;margin:0;font-family:var(--font-mono)}
+.practice-bar{height:8px;background:var(--surface-3);border-radius:10px}
+.practice-bar::before{content:"";display:block;width:var(--bar-size,100%);height:100%;border-radius:inherit;background:var(--accent)}
+.practice-footer{margin-top:12px}
+.practice-destinations{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,175px),1fr));gap:8px}
+.practice-destinations .btn{text-align:left}
+.practice-destinations small{display:block;color:var(--text-dim);font-size:11px}
+
 </style>
 <script defer src="analytics-config.js"></script>
 <script defer src="analytics.js"></script>
@@ -734,7 +762,7 @@ input,select,textarea{font-size:16px}
     <div class="account-controls">
       <button type="button" class="btn ghost" onclick="openAesthetics()">Aesthetics</button>
       <button type="button" id="bp-account-app" class="btn ghost" onclick="openBasePayAuth()">Sign in</button>
-      <button class="theme-toggle" aria-label="Help and quick tour" id="theme-btn-app" onclick="showInterfaceTour(0)" title="How does this work?">?</button>
+      <button type="button" class="theme-toggle" aria-label="Open interactive tutorial" aria-haspopup="dialog" id="theme-btn-app" onclick="startPracticeTutorial()" title="Interactive tutorial">?</button>
     </div>
     <div class="stat-pills" aria-label="Simulation summary">
       <span class="pill day" id="pill-day">Day 1</span>
@@ -1296,7 +1324,7 @@ function defaultState(mode){
   applications:[],
   properties:[],
   netWorthHistory:[{day:1,value: mode==='youth'?150:900}],
-  news:[], lastCrashDay:null, achievements:[], tourSeen:false, introsSeen:{},
+  news:[], lastCrashDay:null, achievements:[], introsSeen:{},
  };
 }
 
@@ -2381,6 +2409,10 @@ function renderHome(){
  const [checkpoint] = unfinishedLessons();
  const el = document.getElementById('tab-home');
  el.innerHTML = `
+  ${state.practiceTutorialComplete ? '' : `<section class="card practice-entry" aria-labelledby="practice-entry-title">
+   <div><h2 id="practice-entry-title" tabindex="-1">New to BasePay?</h2><p>Try the main tabs with a separate practice wallet.</p></div>
+   <button type="button" id="practice-start" class="btn primary" aria-haspopup="dialog" onclick="startPracticeTutorial()">Start tutorial</button>
+  </section>`}
   <dl class="money-overview" aria-label="Your simulated money">
    <div><dt>Available cash</dt><dd>${fmt(state.cash)}</dd></div>
    <div><dt>Net worth</dt><dd>${fmt(nw)}</dd></div>
@@ -3766,38 +3798,175 @@ async function startGame(mode){
  buildTabBar();
  switchTab('home');
  renderAll();
- document.getElementById('home-start-title').focus();
+ document.getElementById('practice-entry-title').focus();
 }
-const TOUR_STEPS = [
- {ic:'🏠', t:'Home', d:"Continue your last unfinished lesson, jump to an activity or get a suggested next step."},
- {ic:'🎓', t:'Learn', d:"Each lesson gives you a situation, a decision, feedback and a quick challenge. Longer explanations remain available when you want the detail."},
- {ic:'🏦', t:'Bank', d:"Your current account, savings, ISAs and (later) pension — this is where your money actually lives and grows."},
- {ic:'📈', t:'Invest', d:"Compare long-term investments, practise day trading with a separate simulated wallet, and skip simulation time to see how events change your money."},
- {ic:'💳', t:'Credit', d:"Cards, loans and your credit score — unlocks once you're old enough and have covered the basics."},
- {ic:'🧮', t:'Tools', d:"Calculators and planners to help you budget and work through decisions step by step."},
-];
-function showInterfaceTour(step){
- if(step===undefined){
-  if(state.tourSeen) return;
-  step=0;
+const PRACTICE_TABS = ['home', 'learn', 'bank', 'invest', 'tools'];
+const PRACTICE_DEPOSIT = 30;
+const PRACTICE_BUY = 20;
+const PRACTICE_FUND_RETURN = -.1;
+const PRACTICE_SPENDING_LIMIT = 25;
+const PRACTICE_DESTINATIONS = {
+ home: 'Check cash and move time',
+ learn: 'Try a scenario or lesson',
+ bank: 'Manage savings and ISAs',
+ invest: 'Explore funds, shares and trading',
+ tools: 'Build a budget or run a calculation',
+ credit: 'Explore borrowing and credit scores',
+ property: 'Try buying a home with a mortgage',
+ news: 'See what moved the simulated market',
+ awards: 'View your achievements',
+};
+let practiceTutorial = null;
+
+function startPracticeTutorial(){
+ if(!state) return;
+ practiceTutorial = {step:0, cash:0, savings:0, fund:null, marketMoved:false, learned:false, budgeted:false, feedback:''};
+ renderPracticeTutorial();
+}
+function practiceBalances(items){
+ return `<dl class="practice-balances">${items.map(([label,value])=>`<div><dt>${label}</dt><dd>${typeof value==='number'?fmt(value):value}</dd></div>`).join('')}</dl>`;
+}
+function practiceButton(label, action, primary=true){
+ return `<button type="button" class="btn${primary?' primary':''}" onclick="runPracticeAction('${action}')">${label}</button>`;
+}
+function renderPracticeStage(tutorial){
+ const {step, cash, savings, fund, marketMoved, learned, budgeted} = tutorial;
+ if(step===0){
+  const pay = state.mode==='youth' ? 'pocket money' : 'pay';
+  return `<h4>Collect your ${pay}</h4>
+   <p class="practice-instruction">Use Home to see what you have and move to payday.</p>
+   ${practiceBalances([['Simulation day',String(cash?31:1)],['Available cash',cash]])}
+   ${cash?'':practiceButton('Skip to payday','pay')}`;
  }
- const s = TOUR_STEPS[step];
- const last = step===TOUR_STEPS.length-1;
- const dots = TOUR_STEPS.map((_,i)=>`<span style="width:6px; height:6px; border-radius:50%; display:inline-block; margin-right:5px; background:${i===step?'var(--purple)':'var(--border)'};"></span>`).join('');
- openModal(`
-  <button class="modal-close" onclick="endInterfaceTour()">✕</button>
-  <span class="badge purple">Quick tour ${step+1}/${TOUR_STEPS.length}</span>
-  <h3 style="margin-top:10px;">${s.ic} ${s.t}</h3>
-  <p style="font-size:12.5px; color:var(--text-dim); line-height:1.7;">${s.d}</p>
-  <div style="margin:14px 0;">${dots}</div>
-  <div class="btn-row">
-   ${step>0?`<button class="btn ghost" onclick="showInterfaceTour(${step-1})">Back</button>`:''}
-   <button class="btn primary" onclick="${last?'endInterfaceTour()':`showInterfaceTour(${step+1})`}">${last?"Let's go":'Next'}</button>
-   ${!last?`<button class="btn ghost" onclick="endInterfaceTour()">Skip</button>`:''}
-  </div>
- `);
+ if(step===1){
+  return `<h4>Choose what to do</h4>
+   <p class="practice-instruction">A £30 bill is due tomorrow. You also want £80 headphones. What do you do first?</p>
+   ${practiceBalances([['Available cash',cash],['Bill due tomorrow',PRACTICE_DEPOSIT]])}
+   ${learned?'':`<div class="btn-row">${practiceButton('Buy the headphones','headphones',false)}${practiceButton('Set aside £30','set-aside',false)}</div>`}`;
+ }
+ if(step===2){
+  return `<h4>Move £30 into savings</h4>
+   <p class="practice-instruction">Bank is where you can separate money you plan to keep from money you can spend.</p>
+   ${practiceBalances([['Available cash',cash],['Savings',savings]])}
+   ${savings?'':practiceButton('Deposit £30','deposit')}`;
+ }
+ if(step===3){
+  return `<h4>Buy a small amount of an index fund</h4>
+   <p class="practice-instruction">An index fund can hold shares in many companies. Try buying £20 and see what happens when time moves.</p>
+   ${practiceBalances([['Available cash',cash],['Fund value',fund??0]])}
+   ${marketMoved?`<dl class="practice-chart" aria-label="Practice fund value">
+    <div><dt>At purchase</dt><dd><span class="practice-bar" aria-hidden="true"></span>${fmt2(PRACTICE_BUY)}</dd></div>
+    <div><dt>Next day</dt><dd><span class="practice-bar" style="--bar-size:${(1+PRACTICE_FUND_RETURN)*100}%" aria-hidden="true"></span>${fmt2(fund)}</dd></div>
+   </dl>`:practiceButton(fund===null?'Buy £20':'+1 day',fund===null?'buy':'advance')}`;
+ }
+ return `<h4>Plan your next spend</h4>
+  <p class="practice-instruction">You have £50 left in cash and want to keep £25 for next week. What can you spend today?</p>
+  ${practiceBalances([['Available cash',cash],['Keep for next week',PRACTICE_SPENDING_LIMIT]])}
+  ${budgeted?'':`<div class="btn-row">${practiceButton('£25','budget-fit',false)}${practiceButton('£40','budget-over',false)}</div>`}`;
 }
-function endInterfaceTour(){ state.tourSeen=true; saveState(); closeModal(); }
+function practiceStepReady({step,cash,learned,savings,marketMoved,budgeted}){
+ return [cash>0, learned, savings>0, marketMoved, budgeted][step];
+}
+function renderPracticeTutorial(){
+ const tutorial = practiceTutorial;
+ const {step, feedback} = tutorial;
+ const current = PRACTICE_TABS[step];
+ const last = step===PRACTICE_TABS.length-1;
+ const next = PRACTICE_TABS[step+1];
+ const tab = TABS.find(item=>item.id===current);
+ if(!tab){
+  openModal(`<button type="button" class="modal-close" onclick="closeModal()">✕</button>
+   <h3>Tutorial complete</h3>
+   <p class="practice-instruction">Choose a tab to try in your own simulation.</p>
+   <div class="practice-destinations practice-footer">
+    ${TABS.filter(item=>state.mode==='adult' || !['credit','property'].includes(item.id)).map(item=>`<button type="button" class="btn" onclick="openPracticeDestination('${item.id}')"><span aria-hidden="true">${item.ic}</span> ${item.label}<small>${PRACTICE_DESTINATIONS[item.id]}</small></button>`).join('')}
+   </div>`);
+  return;
+ }
+ openModal(`<button type="button" class="modal-close" onclick="closeModal()">✕</button>
+  <div class="practice-header"><p>Practice wallet · Step ${step+1} of ${PRACTICE_TABS.length}</p><h3>${tab.label}</h3></div>
+  <ol class="practice-tabs" aria-label="Tutorial progress">
+   ${PRACTICE_TABS.map(id=>{
+    const item = TABS.find(entry=>entry.id===id);
+    return `<li${id===current?' aria-current="step"':''}><span aria-hidden="true">${item.ic}</span>${item.label}</li>`;
+   }).join('')}
+  </ol>
+  <div class="practice-stage">
+   ${renderPracticeStage(tutorial)}
+   ${feedback?`<p class="practice-feedback" tabindex="-1" id="practice-feedback">${feedback}</p>`:''}
+  </div>
+  <div class="btn-row practice-footer">
+   ${practiceStepReady(tutorial)?practiceButton(last?'Finish tutorial':'Next: '+TABS.find(item=>item.id===next).label,'next'):''}
+   <button type="button" class="btn ghost" onclick="closeModal()">Exit tutorial</button>
+  </div>`);
+ if(feedback) document.getElementById('practice-feedback').focus();
+}
+function runPracticeAction(action){
+ const tutorial = practiceTutorial;
+ if(!tutorial) return;
+ tutorial.feedback = '';
+ switch(action){
+  case 'pay':
+   tutorial.cash = 100;
+   tutorial.feedback = 'Payday added £100 to your available cash.';
+   break;
+  case 'headphones':
+   tutorial.feedback = 'Buying the headphones leaves £20. That’s £10 short of the bill. Try the other choice.';
+   break;
+  case 'set-aside':
+   tutorial.learned = true;
+   tutorial.feedback = 'Setting the bill money aside first makes it easier to cover when it’s due. Try moving it in Bank.';
+   break;
+  case 'deposit':
+   tutorial.cash -= PRACTICE_DEPOSIT;
+   tutorial.savings += PRACTICE_DEPOSIT;
+   tutorial.feedback = '£30 moved from cash to savings. Your total money is still £100.';
+   break;
+  case 'buy':
+   tutorial.cash -= PRACTICE_BUY;
+   tutorial.fund = PRACTICE_BUY;
+   tutorial.feedback = 'You swapped £20 in cash for a £20 investment. Now move time to see what happens.';
+   break;
+  case 'advance':
+   tutorial.fund *= 1+PRACTICE_FUND_RETURN;
+   tutorial.marketMoved = true;
+   tutorial.feedback = 'The fund fell from £20 to £18. Your cash and savings stayed the same.';
+   break;
+  case 'budget-over':
+   tutorial.feedback = 'Spending £40 leaves £10 for next week. Try the amount that leaves £25.';
+   break;
+  case 'budget-fit':
+   tutorial.budgeted = true;
+   tutorial.feedback = '£50 minus £25 leaves £25 for next week. Use the budget planner in Tools to test a bigger plan.';
+   break;
+  case 'next':
+   if(!practiceStepReady(tutorial)) return;
+   tutorial.step++;
+   if(tutorial.step===PRACTICE_TABS.length && !state.practiceTutorialComplete){
+    state.practiceTutorialComplete = true;
+    saveState();
+   }
+   break;
+ }
+ renderPracticeTutorial();
+}
+function openPracticeDestination(id){
+ closeModal();
+ if(id==='bank') goToBankSavings();
+ else if(id==='learn') goToLessons();
+ else if(id==='tools') goToBudgetTool();
+ else switchTab(id);
+ document.getElementById('app-main').focus({preventScroll:true});
+}
+document.getElementById('modal-root').addEventListener('close', ()=>{
+ if(document.getElementById('modal-root').open || !practiceTutorial) return;
+ practiceTutorial = null;
+ if(currentTab==='home' && state?.practiceTutorialComplete && document.getElementById('practice-start')){
+  const restoreFocus = document.activeElement.id==='practice-start';
+  renderTab('home');
+  if(restoreFocus) document.getElementById('home-start-title').focus();
+ }
+});
 function resumeGame(saved){
  trackAnalytics('simulator_resumed');
  state = saved;
