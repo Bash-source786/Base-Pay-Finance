@@ -6,7 +6,7 @@ Set `POSTHOG_PROJECT_TOKEN` to the public project token and `POSTHOG_HOST` to th
 
 For local builds, copy `.env.example` to `.env`, fill the values, run `node --env-file=.env scripts/build.mjs` and serve `dist` over HTTP. Never commit `.env` or use a personal API key. The public project token is expected to appear in the browser build.
 
-Direct source deployments (including GitHub Pages branch deployments) continue working with analytics disabled. Deploy generated `dist` to activate analytics.
+Direct source deployments (including GitHub Pages branch deployments) continue working with analytics disabled. Deploy generated `dist` to activate analytics. A build with missing or invalid PostHog settings logs a warning and keeps the site available with analytics disabled.
 
 ## Events and privacy
 The SDK only loads after Allow analytics. Analytics preferences lets visitors withdraw consent. Events before consent are discarded. Autocapture, session replay and surveys are disabled. No financial values, saved-game contents, names or free-text answers are sent as custom properties. After sign-in or session restoration, the verified account UUID identifies consenting users across devices. Email, passwords and auth tokens are never sent. Logout and account switching reset the analytics identity. Consent is a per-browser choice.
@@ -14,6 +14,13 @@ The SDK only loads after Allow analytics. Analytics preferences lets visitors wi
 | Event | Properties | Trigger |
 | --- | --- | --- |
 | `$pageview` | Standard SDK page properties | Page load after consent |
+| `guest_entered` | None | Continue as guest selected |
+| `signup_viewed` | None | Create account form opened |
+| `auth_request_started` | action | An auth form or resend request is sent |
+| `auth_request_failed` | action, reason | A request failed, with a fixed error category |
+| `auth_email_resend_accepted` | action | Verification or reset resend request accepted |
+| `signup_account_ready` | None | Confirmed signup link used or signup returned an active session |
+| `account_entered` | None | Account save files loaded and app opened |
 | `sign_in_succeeded` | None | Successful email/password sign-in |
 | `signup_submitted` | None | Signup request accepted (not proof of email verification) |
 | `sign_out_succeeded` | None | Authenticated account signed out |
@@ -24,6 +31,8 @@ The SDK only loads after Allow analytics. Analytics preferences lets visitors wi
 | `lesson_step_viewed` | lesson_id, step | Lesson step displayed |
 | `quiz_answered` | lesson_id, correct | Quiz answer submitted |
 | `lesson_completed` | lesson_id | First successful completion |
+
+Verification can be attributed to a signup attempt when the confirmation is opened in the same consenting browser. A confirmation in a different browser cannot be joined to the anonymous attempt using the email address.
 
 ## Live verification
 Decline in a fresh browser session and confirm there are no PostHog network requests. Accept through Analytics preferences, start a simulation and complete a lesson; confirm events in PostHog Activity. Withdraw consent and verify no further events. Test blocked SDK loading to ensure learning continues. Live ingestion requires deployment and a real consented visit.

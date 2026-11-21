@@ -69,10 +69,19 @@
       : 'Open the verification email and follow the link to finish creating your account.';
     $('bp-auth-title').focus();
   }
-  function showAuthError(error) {
+  function trackAuth(event, properties) {
+    try { window.basepayTrack?.(event, properties); } catch (_) {}
+  }
+  function showAuthError(error, action) {
     const text = error.message || '';
     const limit = error.code === 'over_email_send_rate_limit' || /email.*rate.*limit|security purposes.*seconds/i.test(text);
     const wait = text.match(/after\s+(\d+)\s+seconds/i);
+    const reason = limit || wait ? (wait ? 'email_cooldown' : 'email_rate_limit')
+      : error.code === 'email_not_confirmed' ? 'email_unconfirmed'
+      : error.code === 'email_address_not_authorized' ? 'email_address_not_authorized'
+      : error.code === 'invalid_credentials' ? 'invalid_credentials'
+      : 'other';
+    trackAuth('auth_request_failed', {action, reason});
     if (wait && activeRetryKey) {
       rememberRetry(activeRetryKey,Number(wait[1]));
       message('An email was requested recently. You can request another in ' + wait[1] + ' seconds. Check your inbox and junk folder for the first email.','error');
@@ -89,16 +98,19 @@
   async function resendEmail() {
     if (submitting || !client) return;
     setSubmitting(true);
+    const action = sentType === 'reset' ? 'reset_resend' : 'signup_resend';
     try {
       activeRetryKey = await emailRequestKey(sentEmail,sentType);
       if (retrySeconds(activeRetryKey)) { updateRetryControls(); return; }
+      trackAuth('auth_request_started', {action});
       const result = sentType === 'reset'
         ? await client.auth.resetPasswordForEmail(sentEmail,{redirectTo:location.origin + location.pathname})
         : await client.auth.resend({type:'signup',email:sentEmail,options:{emailRedirectTo:location.origin + location.pathname}});
       if (result.error) throw result.error;
+      trackAuth('auth_email_resend_accepted', {action});
       rememberRetry(activeRetryKey,60);
       message('Email requested. Please check your inbox and junk folder.');
-    } catch (error) { showAuthError(error); }
+    } catch (error) { showAuthError(error, action); }
     finally { setSubmitting(false); }
   }
   function setSubmitting(value) {
@@ -219,7 +231,9 @@
     $('bp-auth-switch').addEventListener('click', () => setMode(['signup','email-sent'].includes(mode) ? 'signin' : 'signup'));
     $('bp-auth-reset').addEventListener('click', () => setMode(mode === 'reset' ? 'signin' : 'reset'));
     $('bp-auth-signout').addEventListener('click', signOut);
-    $('bp-continue-guest').addEventListener('click', continueAsGuest);
+    $('bp-continue-guest').addEventListener('click', () => {
+      if (continueAsGuest()) trackAuth('guest_entered');
+    });
     return root;
   }
   let mode = 'signin';
@@ -234,6 +248,7 @@
     updateButtons();
     allowAccess();
     $(result.save ? 'app-main' : 'mode-title').focus();
+    return true;
   }
   function setPasswordVisible(visible) {
     const input = $('bp-auth-password'), toggle = $('bp-password-toggle');
@@ -244,7 +259,9 @@
     toggle.setAttribute('aria-pressed', String(visible));
   }
   function setMode(next) {
+    const previous = mode;
     mode = next;
+    if (next === 'signup' && previous !== next) trackAuth('signup_viewed');
     setPasswordVisible(false);
     const signedIn = !!user && next !== 'new-password';
     const emailSent = next === 'email-sent';
@@ -307,6 +324,7 @@
           return;
         }
       }
+      trackAuth('auth_request_started', {action: submittedMode});
       let result;
       if (submittedMode === 'new-password') result = await client.auth.updateUser({password});
       else if (submittedMode === 'signup') result = await client.auth.signUp({email,password,options:{emailRedirectTo:location.origin + location.pathname}});
@@ -317,7 +335,10 @@
         if (submittedMode === 'signin' && result.data?.user) {
           window.basepayAnalyticsUser?.(result.data.user.id);
           window.basepayTrack?.('sign_in_succeeded');
-        } else if (submittedMode === 'signup') window.basepayTrack?.('signup_submitted');
+        } else if (submittedMode === 'signup') {
+          trackAuth('signup_submitted');
+          if (result.data?.session) trackAuth('signup_account_ready');
+        }
       } catch (_) {}
       if (submittedMode === 'new-password') { $('bp-auth-password').value = ''; mode = 'signin'; enterAccount(user); }
       else if (submittedMode === 'reset' || (submittedMode === 'signup' && !result.data.session)) {
@@ -326,7 +347,7 @@
       }
       else { $('bp-auth-password').value = ''; message('Signed in successfully.'); if (submittedMode === 'signup') setMode('signin'); }
     } catch (error) {
-      showAuthError(error);
+      showAuthError(error, submittedMode);
     }
     finally { setSubmitting(false); }
   }
@@ -367,6 +388,7 @@
       activeUid = expectedId;
       allowAccess();
       window.basepayLoadAccountFiles(slots);
+      trackAuth('account_entered');
     }).catch(error => {
       console.error('BasePay account loading failed',error);
       if (generation === expectedGeneration) requireLogin(
@@ -384,11 +406,20 @@
     if (!configured()) { enterGuestOrRequireLogin('Sign-in configuration is unavailable. Please contact BasePay support.'); return; }
     if (!window.supabase || !window.supabase.createClient) { console.warn('BasePay: Supabase client failed to load'); enterGuestOrRequireLogin('Sign-in service could not load. Please refresh this page.'); return; }
     try {
+      // The implicit signup callback contains the token before Supabase clears the URL.
+      // Match the authenticated session to that callback to exclude restored sessions.
+      const callback = new URLSearchParams(location.hash.slice(1));
+      let signupToken = callback.get('type') === 'signup' ? callback.get('access_token') : null;
       client = window.supabase.createClient(window.BASEPAY_SUPABASE_URL,window.BASEPAY_SUPABASE_PUBLISHABLE_KEY);
       client.auth.onAuthStateChange((event,session) => {
         const hadAccount = !!(user || activeUid || entering);
         user = session?.user || null;
         updateButtons();
+        if (signupToken && session?.access_token === signupToken && user?.email_confirmed_at) {
+          signupToken = null;
+          try { window.basepayAnalyticsUser?.(user.id); } catch (_) {}
+          trackAuth('signup_account_ready');
+        }
         if (event === 'PASSWORD_RECOVERY') {
           document.body.classList.add('bp-auth-locked');
           showPanel();
