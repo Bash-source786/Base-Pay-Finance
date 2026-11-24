@@ -25,7 +25,7 @@
   const allowed = new Set([
     'signup_viewed', 'auth_request_started', 'auth_request_failed', 'auth_email_resend_accepted',
     'signup_submitted', 'signup_account_ready', 'sign_in_succeeded', 'sign_out_succeeded',
-    'guest_entered', 'account_entered', 'simulator_started', 'simulator_resumed',
+    'landing_start_clicked', 'guest_entered', 'account_entered', 'simulator_started', 'simulator_resumed',
     'section_viewed', 'lesson_started', 'lesson_step_viewed', 'quiz_answered', 'lesson_completed'
   ]);
   const authActions = new Set(['signup', 'signin', 'reset', 'new-password', 'signup_resend', 'reset_resend']);
@@ -96,7 +96,8 @@
   function choose(value) {
     consent = value;
     try { localStorage.setItem(key,value); } catch (_) {}
-    document.getElementById('analytics-choice').hidden = true;
+    panel.hidden = true;
+    panel.closest('footer').querySelector('.analytics-settings').focus();
     if (value === 'yes') {
       if (ready) { window.posthog.opt_in_capturing({captureEventName:false}); identify(); }
       else start();
@@ -109,18 +110,18 @@
   const panel = document.createElement('aside');
   panel.id = 'analytics-choice';
   panel.setAttribute('aria-label','Analytics preferences');
-  panel.style.cssText = 'position:fixed;bottom:82px;left:12px;right:12px;max-width:520px;margin:auto;z-index:2100;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 4px 24px #0005';
-  panel.innerHTML = '<strong>Help improve BasePay?</strong><p style="margin:8px 0;font-size:12px">Allow PostHog analytics to measure visits, account steps, sign-in errors and lesson progress, linked across devices using your account ID. We do not send your email, password or financial inputs, or record your screen. Change this choice anytime.</p><div class="btn-row"><button class="btn" id="analytics-decline">No thanks</button><button class="btn" id="analytics-accept">Allow analytics</button></div>';
+  panel.innerHTML = '<strong>Help improve BasePay?</strong><p>Allow PostHog to measure visits, account steps and lesson progress. If you sign in, activity can be linked across devices using your account ID. We do not send email, passwords or financial inputs, or record your screen.</p><div class="btn-row"><button type="button" class="btn" id="analytics-decline">No thanks</button><button type="button" class="btn" id="analytics-accept">Allow analytics</button></div>';
   panel.hidden = consent !== null;
-  document.body.appendChild(panel);
+  document.getElementById('landing-analytics').appendChild(panel);
   document.getElementById('analytics-decline').onclick = () => choose('no');
   document.getElementById('analytics-accept').onclick = () => choose('yes');
-  const settings = document.createElement('button');
-  settings.className = 'btn sm';
-  settings.textContent = 'Analytics preferences';
-  settings.style.cssText = 'position:fixed;bottom:70px;right:12px;z-index:2101;font-size:10px';
-  settings.onclick = () => { panel.hidden = false; };
-  document.body.appendChild(settings);
+  for (const settings of document.querySelectorAll('.analytics-settings')) {
+    settings.hidden = false;
+    settings.onclick = () => {
+      settings.closest('footer').querySelector('[id$="-analytics"]').appendChild(panel);
+      panel.hidden = false;
+      document.getElementById('analytics-decline').focus();
+    };
+  }
   start();
 })();
-

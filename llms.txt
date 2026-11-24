@@ -1,0 +1,9 @@
+# BasePay
+
+> Free UK financial education through interactive lessons and a simulator that uses pretend money.
+
+## Public pages
+
+- [BasePay homepage](https://basepay.org.uk/): Start free in the browser or sign in to continue a saved simulation.
+- [BasePay guide](https://basepay.org.uk/basepay.md): Text overview of the lessons, simulator, guest access and save files.
+- [Privacy](https://basepay.org.uk/privacy.md): Text version of the privacy page, including account storage and optional analytics.

@@ -14,6 +14,7 @@ The SDK only loads after Allow analytics. Analytics preferences lets visitors wi
 | Event | Properties | Trigger |
 | --- | --- | --- |
 | `$pageview` | Standard SDK page properties | Page load after consent |
+| `landing_start_clicked` | None | Start free selected on the homepage |
 | `guest_entered` | None | Continue as guest selected |
 | `signup_viewed` | None | Create account form opened |
 | `auth_request_started` | action | An auth form or resend request is sent |

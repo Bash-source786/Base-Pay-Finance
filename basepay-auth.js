@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   let client = null, user = null, activeUid = null, entering = null, generation = 0;
-  let guest = false;
+  let guest = false, restoringSession = false;
   let submitting = false;
   let sentEmail = '', sentType = 'signup', cooldownTimer = null, returnFocus = null;
   const cooldowns = new Map();
@@ -125,15 +125,6 @@
     updateRetryControls();
   }
   function locked() { return document.body.classList.contains('bp-auth-locked'); }
-  function requireLogin(note) {
-    if (guest) return;
-    document.body.classList.add('bp-auth-locked');
-    showPanel();
-    setMode('signin');
-    const {damaged, issue} = window.BasePayCloud.readGuestSave();
-    const notice = [note, damaged ? issue : ''].filter(Boolean).join(' ');
-    if (notice) message(notice, 'error');
-  }
   function allowAccess() {
     document.body.classList.remove('bp-auth-locked');
     close();
@@ -239,7 +230,7 @@
   let mode = 'signin';
   function continueAsGuest() {
     if (submitting || user || entering || mode === 'new-password') return;
-    if (guest) { allowAccess(); return; }
+    if (guest) { allowAccess(); $('mode-title').focus(); return; }
     generation++;
     guest = true;
     try { window.basepayAnalyticsUser?.(null); } catch (_) {}
@@ -250,6 +241,11 @@
     $(result.save ? 'app-main' : 'mode-title').focus();
     return true;
   }
+  window.startBasePay = () => {
+    if (restoringSession || entering || user) return;
+    trackAuth('landing_start_clicked');
+    if (continueAsGuest()) trackAuth('guest_entered');
+  };
   function setPasswordVisible(visible) {
     const input = $('bp-auth-password'), toggle = $('bp-password-toggle');
     if (!input || !toggle) return;
@@ -371,7 +367,9 @@
     window.BasePayCloud?.logout();
     window.basepayClearForSignOut?.();
     updateButtons();
-    requireLogin();
+    $('bp-start').disabled = false;
+    allowAccess();
+    $('bp-account-landing').focus();
   }
   function enterAccount(current){
     if (!current) return;
@@ -391,29 +389,31 @@
       trackAuth('account_entered');
     }).catch(error => {
       console.error('BasePay account loading failed',error);
-      if (generation === expectedGeneration) requireLogin(
-        'Could not load your account progress. '+ (error.message || 'Please try again.'));
+      if (generation === expectedGeneration) {
+        document.body.classList.remove('bp-auth-locked');
+        setMode('signin');
+        message('Could not load your account progress. Refresh to try again, or sign out to continue as a guest.', 'error');
+      }
     }).finally(()=>{ entering = null; });
-  }
-  function enterGuestOrRequireLogin(note) {
-    if (user || mode === 'new-password') return;
-    if (window.BasePayCloud.readGuestSave().save) continueAsGuest();
-    else requireLogin(note);
   }
   function init() {
     if (window.BasePayCloud.takeGuestRestart()) continueAsGuest();
     updateButtons();
-    if (!configured()) { enterGuestOrRequireLogin('Sign-in configuration is unavailable. Please contact BasePay support.'); return; }
-    if (!window.supabase || !window.supabase.createClient) { console.warn('BasePay: Supabase client failed to load'); enterGuestOrRequireLogin('Sign-in service could not load. Please refresh this page.'); return; }
+    if (!configured() || !window.supabase?.createClient) return;
     try {
       // The implicit signup callback contains the token before Supabase clears the URL.
       // Match the authenticated session to that callback to exclude restored sessions.
       const callback = new URLSearchParams(location.hash.slice(1));
+      const search = new URLSearchParams(location.search);
+      restoringSession = callback.has('access_token') || search.has('code');
+      $('bp-start').disabled = restoringSession;
       let signupToken = callback.get('type') === 'signup' ? callback.get('access_token') : null;
       client = window.supabase.createClient(window.BASEPAY_SUPABASE_URL,window.BASEPAY_SUPABASE_PUBLISHABLE_KEY);
       client.auth.onAuthStateChange((event,session) => {
         const hadAccount = !!(user || activeUid || entering);
         user = session?.user || null;
+        restoringSession = false;
+        $('bp-start').disabled = !!user;
         updateButtons();
         if (signupToken && session?.access_token === signupToken && user?.email_confirmed_at) {
           signupToken = null;
@@ -428,7 +428,6 @@
         }
         if (event === 'SIGNED_OUT') {
           if (hadAccount) clearAccount();
-          else enterGuestOrRequireLogin();
           return;
         }
         if (user && mode !== 'new-password') {
@@ -436,17 +435,11 @@
           setTimeout(() => enterAccount(user), 0);
         }
       });
-      client.auth.getUser().then(({data,error}) => {
-        if (error || !data.user) {
-          enterGuestOrRequireLogin();
-        } else {
-          user = data.user;
-          updateButtons();
-          if (mode !== 'new-password') enterAccount(user);
-        }
-      }).catch(() => enterGuestOrRequireLogin('Unable to verify your session. Please sign in.'));
-
-    } catch (e) { console.warn('BasePay: Could not initialize authentication',e); enterGuestOrRequireLogin('Sign-in could not start. Please refresh this page.'); }
+    } catch (error) {
+      restoringSession = false;
+      $('bp-start').disabled = false;
+      console.warn('BasePay: Could not initialize authentication',error);
+    }
   }
   document.addEventListener('keydown',event=>{
     const root=$('bp-auth-root');
