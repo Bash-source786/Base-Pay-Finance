@@ -296,12 +296,16 @@ input[type=range]{width:100%; accent-color:var(--green);}
 .budget-row select{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px}
 .budget-row .budget-remove{justify-self:start}
 .personal-budget-form h3{margin-top:20px}
-.budget-totals{margin:16px 0}
+.budget-totals{margin:16px 0;padding:0 12px;border:1px solid var(--border);border-radius:12px}
+.budget-add-row{display:flex;flex-wrap:wrap;align-items:end;gap:8px}
+.budget-add-row .field{margin:0}
+.budget-add-row select{min-height:44px;color:var(--text);background:var(--surface);padding:6px;border:1px solid var(--border);border-radius:8px}
+.budget-monthly{grid-column:1/-1;margin:0}
 .budget-timeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
 .budget-timeline div{border:1px solid var(--border);border-radius:10px;padding:8px}
 .budget-timeline dt{font-weight:600}
 .budget-timeline dd{margin:2px 0 0;font-size:.875rem}
-.budget-totals strong{white-space:nowrap}
+.budget-totals strong{text-align:right}
 .budget-save-status,.budget-feedback{margin-top:10px}
 @media(min-width:760px){.budget-row{grid-template-columns:2fr 1fr 1fr 1fr auto;align-items:end}}
 @media(max-width:420px){.budget-pair{grid-template-columns:1fr}}

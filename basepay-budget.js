@@ -4,6 +4,7 @@
     'Food', 'Clothes', 'Travel', 'Hobbies', 'Gifts', 'Phone bills',
     'Insurance', 'Music subscriptions', 'Gym memberships', 'Savings'
   ];
+  const starterCategories = ['Food', 'Travel', 'Savings'];
   const frequency = { monthly: 12, weekly: 52, yearly: 1 };
   const money = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' });
   const pounds = pence => money.format(pence / 100);
@@ -39,7 +40,7 @@
       received: saved?.received ?? '',
       target: saved?.target ?? '',
       alreadySaved: saved?.alreadySaved ?? '',
-      rows: Array.isArray(saved?.rows) ? saved.rows : categories.map(name => ({ name, savingsGoal: name === 'Savings' }))
+      rows: Array.isArray(saved?.rows) ? saved.rows : starterCategories.map(name => ({ name, savingsGoal: name === 'Savings' }))
     };
   }
 
@@ -124,17 +125,21 @@
             <div class="field"><label for="budget-expected">Expected take-home income (£)</label><input id="budget-expected" type="number" min="0" max="1000000" step="0.01"></div>
             <div class="field"><label for="budget-received">Income received so far (£)</label><input id="budget-received" type="number" min="0" max="1000000" step="0.01"></div>
           </div>
+          <div class="budget-totals" role="region" aria-label="Budget summary"></div>
           <h3>Spending and savings</h3>
-          <p class="muted">Choose how often each planned cost occurs. Enter actual amounts for the selected month only.</p>
+          <p class="muted">Start with what you plan to spend. You can leave actual spending blank and fill it in as you go.</p>
           <div class="budget-rows"></div>
-          <button type="button" class="btn budget-add">Add category</button>
+          <div class="budget-add-row">
+            <div class="field"><label for="budget-category">Category to add</label><select id="budget-category"></select></div>
+            <button type="button" class="btn budget-add">Add category</button>
+          </div>
           <h3>Savings goal</h3>
           <p class="muted">Use the Savings row for the amount you plan to put towards this goal each month.</p>
           <div class="budget-pair">
             <div class="field"><label for="budget-target">Savings target (£)</label><input id="budget-target" type="number" min="0" max="1000000" step="0.01"></div>
             <div class="field"><label for="budget-saved">Already saved (£)</label><input id="budget-saved" type="number" min="0" max="1000000" step="0.01"></div>
           </div>
-          <div class="budget-totals" aria-label="Budget summary"></div>
+          <p class="budget-goal-result" role="status"></p>
           <div class="btn-row"><button type="submit" class="btn primary">Save this month</button>
             <button type="button" class="btn budget-delete">Clear this month</button></div>
           <p class="budget-save-status" role="status">${dirty ? 'Unsaved changes.' : ''}</p>
@@ -154,7 +159,16 @@
       container.querySelector('#budget-month').focus();
     };
     const rows = form.querySelector('.budget-rows');
+    const categoryPicker = form.querySelector('#budget-category');
     const status = form.querySelector('.budget-save-status');
+
+    function refreshCategoryPicker() {
+      const selected = categoryPicker.value;
+      const used = new Set(draft.rows.map(row => row.name.trim().toLowerCase()));
+      const available = categories.filter(name => !used.has(name.toLowerCase()));
+      categoryPicker.replaceChildren(new Option('Custom category', ''), ...available.map(name => new Option(name, name)));
+      if (available.includes(selected)) categoryPicker.value = selected;
+    }
 
     function updateSummary() {
       let planned = 0;
@@ -175,13 +189,20 @@
       const actualLeft = amount(draft.received) - actual;
       form.querySelector('.budget-totals').innerHTML = `
         <div class="card-row"><span>Planned monthly spending and savings</span><strong>${pounds(planned)}</strong></div>
-        <div class="card-row"><span>${plannedLeft < 0 ? 'Planned shortfall' : 'Left in your plan'}</span><strong>${pounds(Math.abs(plannedLeft))}</strong></div>
+        <div class="card-row"><span>${draft.expected !== '' && plannedLeft < 0 ? 'Planned shortfall' : 'Left in your plan'}</span><strong>${draft.expected === '' ? 'Enter expected income' : pounds(Math.abs(plannedLeft))}</strong></div>
         <div class="card-row"><span>Actual spending and savings so far</span><strong>${pounds(actual)}</strong></div>
-        <div class="card-row"><span>${actualLeft < 0 ? 'Shortfall so far' : 'Left from income received'}</span><strong>${pounds(Math.abs(actualLeft))}</strong></div>
+        <div class="card-row"><span>${draft.received !== '' && actualLeft < 0 ? 'Shortfall so far' : 'Left from income received'}</span><strong>${draft.received === '' ? 'Enter income received' : pounds(Math.abs(actualLeft))}</strong></div>
         ${recurringAnnual ? `<p class="muted">At this rate, your planned costs and savings add up to ${pounds(recurringAnnual)} a year.</p>` : ''}
-        ${goal ? `<p>${leftToSave === 0 ? 'Savings goal reached.' : monthlySavings
-          ? `You need ${pounds(leftToSave)} more. At your planned rate that takes ${Math.ceil(leftToSave / monthlySavings)} month(s).`
-          : `You need ${pounds(leftToSave)} more. Add a planned amount to Savings to estimate how long it will take.`}</p>` : ''}`;
+        `;
+      const months = monthlySavings ? Math.ceil(leftToSave / monthlySavings) : 0;
+      let goalResult = '';
+      if (goal && !leftToSave) goalResult = 'Savings goal reached.';
+      else if (goal && months) {
+        goalResult = `You need ${pounds(leftToSave)} more. At your planned rate, that takes ${months} ${months === 1 ? 'month' : 'months'}.`;
+      } else if (goal) {
+        goalResult = `You need ${pounds(leftToSave)} more. Add a planned amount to Savings to estimate how long it will take.`;
+      }
+      form.querySelector('.budget-goal-result').textContent = goalResult;
     }
 
     function changed() {
@@ -207,7 +228,7 @@
         <label>Planned cost (£)<input data-key="planned" type="number" min="0" max="1000000" step="0.01"></label>
         <label>Frequency<select data-key="frequency"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="yearly">Yearly</option></select></label>
         <label>Actual this month (£)<input data-key="actual" type="number" min="0" max="1000000" step="0.01"></label>
-        <button type="button" class="btn budget-remove">Remove</button>`;
+        <button type="button" class="btn budget-remove">Remove</button><p class="budget-monthly faint"></p>`;
       const legend = fieldset.querySelector('legend');
       const remove = fieldset.querySelector('button');
       function nameRow() {
@@ -215,13 +236,21 @@
         if (row.savingsGoal && legend.textContent !== 'Savings') legend.textContent += ' (savings goal)';
         remove.setAttribute('aria-label', 'Remove ' + legend.textContent);
       }
+      const monthlyHint = fieldset.querySelector('.budget-monthly');
+      function updateMonthlyHint() {
+        monthlyHint.hidden = !row.planned || !['weekly', 'yearly'].includes(row.frequency);
+        monthlyHint.textContent = monthlyHint.hidden ? '' :
+          `${pounds(Math.round(amount(row.planned) * frequency[row.frequency] / 12))} per month on average`;
+      }
       nameRow();
+      updateMonthlyHint();
       for (const input of fieldset.querySelectorAll('[data-key]')) {
         const key = input.dataset.key;
         input.value = row[key] ?? (key === 'frequency' ? 'monthly' : '');
         input.oninput = () => {
           row[key] = input.value;
-          nameRow();
+          if (key === 'name') { nameRow(); refreshCategoryPicker(); }
+          updateMonthlyHint();
           changed();
         };
       }
@@ -229,6 +258,7 @@
         const nextFocus = fieldset.nextElementSibling?.querySelector('input') || form.querySelector('.budget-add');
         draft.rows.splice(draft.rows.indexOf(row), 1);
         fieldset.remove();
+        refreshCategoryPicker();
         changed();
         nextFocus.focus();
       };
@@ -237,14 +267,23 @@
     }
 
     draft.rows.forEach(appendRow);
+    refreshCategoryPicker();
     form.querySelector('.budget-add').onclick = () => {
-      const row = { name: '' };
+      const name = categoryPicker.value;
+      const row = { name, savingsGoal: name === 'Savings' };
       draft.rows.push(row);
-      appendRow(row).querySelector('input').focus();
+      appendRow(row).querySelector(name ? '[data-key="planned"]' : '[data-key="name"]').focus();
+      refreshCategoryPicker();
       changed();
     };
     form.onsubmit = event => {
       event.preventDefault();
+      const unnamed = [...rows.querySelectorAll('[data-key="name"]')].find(input => !input.value.trim());
+      if (unnamed) {
+        status.textContent = 'Give each category a name before saving.';
+        unnamed.focus();
+        return;
+      }
       try {
         const budgets = readBudgets();
         budgets[selectedMonth] = draft;
