@@ -286,6 +286,30 @@ input[type=range]{width:100%; accent-color:var(--green);}
 /* tabs within a panel (sub nav) */
 .subtabs{display:flex; gap:6px; overflow-x:auto; margin-bottom:12px; scrollbar-width:none;}
 .subtabs::-webkit-scrollbar{display:none;}
+#tab-tools .subtabs{flex-wrap:wrap;overflow:visible}
+.budget-pair,.budget-row{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.budget-row{border:1px solid var(--border);border-radius:12px;padding:12px;margin:0 0 12px;min-width:0}
+.budget-row legend{padding:0 4px;font-weight:600;overflow-wrap:anywhere;max-width:100%}
+.budget-row label{display:grid;gap:5px;align-content:start;font-size:.875rem}
+.budget-row input,.budget-row select,.budget-pair input,#budget-month{width:100%;min-width:0}
+.budget-row input,.budget-row select,#budget-month{min-height:44px}
+.budget-row select{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px}
+.budget-row .budget-remove{justify-self:start}
+.personal-budget-form h3{margin-top:20px}
+.budget-totals{margin:16px 0;padding:0 12px;border:1px solid var(--border);border-radius:12px}
+.budget-add-row{display:flex;flex-wrap:wrap;align-items:end;gap:8px}
+.budget-add-row .field{margin:0}
+.budget-add-row select{min-height:44px;color:var(--text);background:var(--surface);padding:6px;border:1px solid var(--border);border-radius:8px}
+.budget-monthly{grid-column:1/-1;margin:0}
+.budget-timeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.budget-timeline div{border:1px solid var(--border);border-radius:10px;padding:8px}
+.budget-timeline dt{font-weight:600}
+.budget-timeline dd{margin:2px 0 0;font-size:.875rem}
+.budget-totals strong{text-align:right}
+.budget-save-status,.budget-feedback{margin-top:10px}
+@media(min-width:760px){.budget-row{grid-template-columns:2fr 1fr 1fr 1fr auto;align-items:end}}
+@media(max-width:420px){.budget-pair{grid-template-columns:1fr}}
+
 .subtab{flex:0 0 auto; padding:7px 12px; border-radius:100px; border:1px solid var(--border); background:var(--surface); font-size:11.5px; color:var(--text-dim); cursor:pointer; white-space:nowrap;}
 .subtab.active{color:var(--bg); background:var(--text); border-color:var(--text);}
 
@@ -609,7 +633,7 @@ input,select,textarea{font-size:16px}
 .tabbar-inner{max-width:none}
 .tabbtn{opacity:1;color:var(--text-dim);font-size:11px;min-height:60px}
 .tabbtn.active{color:var(--accent);border-color:var(--accent);background:var(--surface)}
-.mobile-more{display:none}
+.mobile-more,.tools-nav-short{display:none}
 .save-preview{display:flex;justify-content:space-between;gap:12px;margin:16px 0 8px;font-size:12px;color:var(--text-dim)}
 .save-file-progress{margin:12px 0 8px}
 .bp-auth-panel{padding:28px;border-radius:22px}
@@ -635,6 +659,8 @@ input,select,textarea{font-size:16px}
 @media(max-width:699px){
  .tabbtn:not(.mobile-primary):not(.mobile-more){display:none}
  .mobile-more{display:flex}
+ .tools-nav-full{display:none}
+ .tools-nav-short{display:inline}
  .tabbtn{flex:1 1 0;min-width:0}
  .wrap{max-width:100%}
  #app{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
@@ -685,6 +711,7 @@ input,select,textarea{font-size:16px}
 <script defer src="basepay-cloud.js?v=3"></script>
 <script defer src="basepay-auth.js?v=7"></script>
 <script defer src="basepay-tutorial.js"></script>
+<script defer src="basepay-budget.js"></script>
 <meta name="apple-mobile-web-app-title" content="BasePay">
 <meta name="application-name" content="BasePay">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -706,8 +733,8 @@ input,select,textarea{font-size:16px}
     <h1>Practise real-life money decisions.</h1>
     <p class="lead">Budget a UK payslip, build savings or try investing with simulated money. Make a choice and see what happens.</p>
     <div class="landing-start requires-js">
-      <button class="btn primary" type="button" id="bp-start" onclick="startBasePay()">Start free</button>
-      <p>Try it as a guest. Sign in to save across devices.</p>
+      <button class="btn primary" type="button" id="bp-start" onclick="startBasePay()">Try the simulator</button>
+      <p>Start as a guest. Sign in to sync your simulation progress.</p>
     </div>
     <noscript><p>Enable JavaScript to start the simulator. <a href="basepay.md">Read the BasePay guide</a>.</p></noscript>
   </div>
@@ -727,7 +754,7 @@ input,select,textarea{font-size:16px}
     <h2 id="mode-title" tabindex="-1">Choose your starting point</h2>
     <p id="mode-error" role="alert"></p>
     <button type="button" id="guest-start-fresh" class="btn hide" onclick="confirmResetGuestProgress()">Start fresh</button>
-    <details class="details-card"><summary>What will I do inside BasePay?</summary><div class="details-content">You will work through short scenarios, choose what to do, see the consequences, then try the idea in a simulator. You can explore pay, budgeting, saving, credit, investing, trading and property. Everything uses simulated money and simplified examples; it is not financial advice.</div></details>
+    <details class="details-card"><summary>What will I do inside BasePay?</summary><div class="details-content">You will work through short scenarios, choose what to do, see the consequences, then try the idea in a simulator. You can explore pay, budgeting, saving, credit, investing, trading and property. Scenarios use fictional money. You can also make a personal budget using your own figures and save it in this browser.</div></details>
     <div class="mode-cards">
       <button class="mode-card" onclick="startGame('youth')">
         <h4>🎒 Youth Mode <span class="badge purple">Ages 5–17</span></h4>
@@ -819,7 +846,7 @@ const LESSONS = [
  body:"Every payslip tells the same story: gross pay (everything you've earned) minus deductions equals net pay (what actually lands in your account). The big deductions are Income Tax and National Insurance, both taken automatically before you're paid. In this simulation, the pension uses relief at source. Your contribution comes out of pay after tax, and the pension provider adds government tax relief to your pension. Learning to read this one document is the foundation for everything else: budgeting, saving, and borrowing all start from knowing what you actually have.",
  quiz:{q:"Your payslip shows a 'gross pay' of £2,500. What does this mean?",options:["The amount that lands in your bank account","Your total pay before any tax or deductions come off","Your pay after tax only"],correct:1,explain:"Gross pay is before Income Tax, National Insurance, pension and anything else is deducted. What actually reaches your account is net pay, or take-home pay."}},
 {id:2,cat:'Budgeting',title:'Give Every Pound a Job',gate:null,
- practiceAction:"goToTools()", practiceLabel:"Tools → try the budget planner",
+ practiceAction:"goToTools()", practiceLabel:"Try a first-job budget",
  body:"A zero-based budget means income minus outgoings equals zero — not because you're broke, but because every single pound has been deliberately assigned somewhere: bills, fun, or growth (saving/investing/debt payoff). Nothing sits around unassigned, because unassigned money is money that quietly disappears. This isn't about restriction — it's about choosing where your money goes before it goes there, instead of finding out afterwards.",
  quiz:{q:"In a zero-based budget, you have £100 left after listing all your planned expenses. What should you do with it?",options:["Leave it unallocated for now","Give it a job — savings, debt payoff, or a specific goal","It doesn't matter either way"],correct:1,explain:"Zero-based budgeting means every pound is assigned a job in advance. Leftover money should be deliberately directed somewhere, not left to disappear."}},
 {id:3,cat:'Saving',title:'Why the Emergency Fund Comes First',gate:'savings_bonus',
@@ -1785,8 +1812,12 @@ function toggleElectoralRoll(){
  saveState(); renderAll();
 }
 function setBudget(bills,fun,growth){
- const total = Number(bills)+Number(fun)+Number(growth);
- if(Math.abs(total-100)>0.5){ toast('Your three percentages should add up to 100%.','warn'); return; }
+ const percentages = [bills, fun, growth].map(value => value === '' ? NaN : Number(value));
+ const total = percentages.reduce((sum, percentage) => sum + percentage, 0);
+ if(percentages.some(percentage => !Number.isFinite(percentage) || percentage < 0 || percentage > 100) || Math.abs(total-100)>0.00001){
+  toast('Enter three percentages between 0 and 100 that add up to 100%.','warn');
+  return;
+ }
  state.budget = {bills:Number(bills), fun:Number(fun), growth:Number(growth)};
  saveState(); renderAll(); toast('Budget saved — it applies from your next payday.');
 }
@@ -2109,26 +2140,27 @@ function svgGauge(value,max,color,size,sub){
 const TABS = [
  {id:'home', label:'Home', ic:'🏠'}, {id:'learn', label:'Learn', ic:'🎓'}, {id:'bank', label:'Bank', ic:'🏦'},
  {id:'invest', label:'Invest', ic:'📈'}, {id:'property', label:'Property', ic:'🏘️'}, {id:'credit', label:'Credit', ic:'💳'},
- {id:'tools', label:'Tools', ic:'🧮'}, {id:'news', label:'News', ic:'📰'}, {id:'awards', label:'Awards', ic:'🏆'},
+ {id:'tools', label:'Budget & Money Tools', ic:'🧮'}, {id:'news', label:'News', ic:'📰'}, {id:'awards', label:'Awards', ic:'🏆'},
 ];
+const MOBILE_PRIMARY_TABS = ['home','learn','tools','invest'];
 let currentTab='home';
 function buildTabBar(){
  const el = document.getElementById('tabbar-inner');
  el.innerHTML = TABS.filter(t=>state.mode==='adult' || !['property','credit'].includes(t.id))
-  .map(t=>`<button type="button" class="tabbtn${['home','learn','bank','invest'].includes(t.id)?' mobile-primary':''}${t.id===currentTab?' active':''}" ${t.id===currentTab?'aria-current="page"':''} data-tab="${t.id}" onclick="switchTab('${t.id}')"><span class="ic" aria-hidden="true">${t.ic}</span>${t.label}</button>`).join('') + '<button type="button" class="tabbtn mobile-more" aria-haspopup="dialog" onclick="showMoreNavigation()"><span class="ic" aria-hidden="true">•••</span><span id="more-nav-label">More</span></button>';
+  .map(t=>`<button type="button" class="tabbtn${MOBILE_PRIMARY_TABS.includes(t.id)?' mobile-primary':''}${t.id===currentTab?' active':''}" ${t.id===currentTab?'aria-current="page"':''} data-tab="${t.id}" ${t.id==='tools'?'aria-label="Budget &amp; Money Tools"':''} onclick="switchTab('${t.id}')"><span class="ic" aria-hidden="true">${t.ic}</span>${t.id==='tools'?'<span class="tools-nav-full">Budget & Money Tools</span><span class="tools-nav-short">Budget</span>':t.label}</button>`).join('') + '<button type="button" class="tabbtn mobile-more" aria-haspopup="dialog" onclick="showMoreNavigation()"><span class="ic" aria-hidden="true">•••</span><span id="more-nav-label">More</span></button>';
  updateMoreNavigation();
 }
 function updateMoreNavigation(){
  const more=document.querySelector('.mobile-more');
  const selected=TABS.find(tab=>tab.id===currentTab);
- const active=!['home','learn','bank','invest'].includes(currentTab);
+ const active=!MOBILE_PRIMARY_TABS.includes(currentTab);
  more?.classList.toggle('active',active);
  if(more) more.setAttribute('aria-label',active ? 'More sections, current section '+selected.label : 'More sections');
  const label=document.getElementById('more-nav-label');
  if(label) label.textContent=active ? selected.label : 'More';
 }
 function showMoreNavigation(){
- openModal('<button type="button" class="modal-close" onclick="closeModal()">✕</button><h3>Explore BasePay</h3><div class="navigation-grid">'+TABS.filter(tab=>!['home','learn','bank','invest'].includes(tab.id) && (state.mode==='adult' || !['credit','property'].includes(tab.id))).map(tab=>`<button type="button" class="btn" onclick="closeModal();switchTab('${tab.id}');document.getElementById('app-main').focus()"><span aria-hidden="true">${tab.ic}</span>${tab.label}</button>`).join('')+'</div>');
+ openModal('<button type="button" class="modal-close" onclick="closeModal()">✕</button><h3>Explore BasePay</h3><div class="navigation-grid">'+TABS.filter(tab=>!MOBILE_PRIMARY_TABS.includes(tab.id) && (state.mode==='adult' || !['credit','property'].includes(tab.id))).map(tab=>`<button type="button" class="btn" onclick="closeModal();switchTab('${tab.id}');document.getElementById('app-main').focus()"><span aria-hidden="true">${tab.ic}</span>${tab.label}</button>`).join('')+'</div>');
 }
 function switchTab(id){
  if(currentTab!==id) window.BasePayTutorial?.exit(false);
@@ -2168,7 +2200,7 @@ function renderTab(id){
  else if(id==='awards') renderAwards();
  const panel=document.getElementById('tab-'+id);
  const title=id==='home' ? 'Your money, in progress.' : TABS.find(tab=>tab.id===id)?.label;
- panel.insertAdjacentHTML('afterbegin',`<header class="page-heading"><div><h1>${title}</h1>${id==='home'?`<p>${state.mode==='youth'?'Youth':'Adult'} simulation · Day ${state.day}</p>`:''}</div><button type="button" class="btn ghost tab-tutorial-start" onclick="window.BasePayTutorial?.start()">Show me ${TABS.find(tab=>tab.id===id).label}</button></header>`);
+ panel.insertAdjacentHTML('afterbegin',`<header class="page-heading"><div><h1>${title}</h1>${id==='home'?`<p>${state.mode==='youth'?'Youth':'Adult'} simulation · Day ${state.day}</p>`:''}</div><button type="button" class="btn ghost tab-tutorial-start" onclick="window.BasePayTutorial?.start()">${id==='tools'?'Show me the money tools':'Show me '+TABS.find(tab=>tab.id===id).label}</button></header>`);
  window.BasePayTutorial?.render(id);
 }
 
@@ -2179,7 +2211,7 @@ function goToLesson(id){
  openLesson(id);
 }
 function goToLessons(){ learnSub='lessons'; switchTab('learn'); document.getElementById('app-main').focus(); }
-function goToBudgetTool(){ toolsSub='budget'; switchTab('tools'); document.getElementById('app-main').focus(); }
+function goToBudgetTool(){ toolsSub='budget'; window.BasePayBudget?.resetPractice(); switchTab('tools'); document.getElementById('practice-budget-title')?.focus(); }
 function goToBankIsas(){ closeModal(); bankSub='isas'; switchTab('bank'); }
 function goToBankSavings(){ closeModal(); bankSub='savings'; switchTab('bank'); }
 function goToBankPension(){ closeModal(); bankSub='pension'; switchTab('bank'); }
@@ -2194,7 +2226,7 @@ function goToLearnTab(){ closeModal(); switchTab('learn'); }
 function goToCreditTab(){ closeModal(); switchTab('credit'); }
 function goToHome(){ closeModal(); switchTab('home'); }
 function goToBankTab(){ closeModal(); switchTab('bank'); }
-function goToTools(){ closeModal(); switchTab('tools'); }
+function goToTools(){ closeModal(); goToBudgetTool(); }
 function goToPropertyTab(){ closeModal(); switchTab('property'); }
 function goToNewsTab(){ closeModal(); switchTab('news'); }
 
@@ -2206,7 +2238,7 @@ function youthNextStep(){
 
  if(!done(2)){
   return {title:"Give your money a job",
-   text:"Start by deciding what to spend and what to save. Then try setting a simple budget in Tools.",
+   text:"Start by deciding what to spend and what to save. Then try a first-job budget in Budget & Money Tools.",
    cta:"Do 'Give Every Pound a Job'", action:'goToLesson(2)'};
  }
  if(!done(1)){
@@ -2263,7 +2295,7 @@ function adultNextStep(){
  }
  if(!done(2)){
   return {title:"Set a budget",
-   text:"Give every pound a job — bills, fun, and growth — so nothing just drifts away unassigned. You can set the actual split in Tools once you've done this.",
+   text:"Give every pound a job — bills, fun, and growth — so nothing just drifts away unassigned. You can set your simulated payday split in Budget & Money Tools.",
    cta:"Do 'Give Every Pound a Job'", action:'goToLesson(2)'};
  }
  if(emergencyMonths<3 && !done(3)){
@@ -2356,7 +2388,7 @@ function renderHomeActions(checkpoint){
   <div class="home-actions" role="group" aria-label="Explore BasePay">
    <button type="button" class="btn${lesson?'':' primary'}" onclick="goToLessons()">Learn about money<span>Short lessons with real-life decisions</span></button>
    <button type="button" class="btn" onclick="goToTradingDesk()">Practise trading<span>Explore gold, shares and fictional forex</span></button>
-   <button type="button" class="btn" onclick="goToBudgetTool()">Use a calculator<span>Plan a budget or test the numbers</span></button>
+   <button type="button" class="btn" onclick="goToBudgetTool()">Try a first-job budget<span>Practise payday and spending decisions</span></button>
   </div>
  </section>`;
 }
@@ -3499,17 +3531,19 @@ function renderTools(){
  const lockedRoute = !adult && isAdultCalculator(toolsSub);
  if(lockedRoute) toolsSub='budget';
  el.innerHTML = `
-  <div class="subtabs">
-   <button class="subtab ${toolsSub==='budget'?'active':''}" onclick="setToolsSub('budget')">Budget</button>
-   <button class="subtab ${toolsSub==='isa'?'active':''}" onclick="setToolsSub('isa')">ISA Tracker</button>
-   <button class="subtab ${toolsSub==='growth'?'active':''}" onclick="setToolsSub('growth')">Growth Calc</button>
-   ${adult?`<button class="subtab ${toolsSub==='mortgage'?'active':''}" onclick="setToolsSub('mortgage')">Mortgage Calc</button>
-   <button class="subtab ${toolsSub==='payoff'?'active':''}" onclick="setToolsSub('payoff')">Card Payoff</button>`:''}
+  <div class="subtabs" role="group" aria-label="Budget and money tools">
+   ${[
+    ['budget','Practise with a simulation'], ['personal','Use in real life'],
+    ['split','Simulated payday split'], ['isa','ISA tracker'], ['growth','Growth calculator'],
+    ...(adult ? [['mortgage','Mortgage calculator'], ['payoff','Card payoff']] : [])
+   ].map(([id,label])=>`<button type="button" class="subtab ${toolsSub===id?'active':''}" aria-pressed="${toolsSub===id}" onclick="setToolsSub('${id}')">${label}</button>`).join('')}
   </div>
   ${lockedRoute?'<p class="lock-row" role="status">Mortgage and card payoff calculators unlock at age 18.</p>':''}
   <div id="tools-body"></div>`;
  const body = document.getElementById('tools-body');
- if(toolsSub==='budget') body.innerHTML = renderBudgetTool();
+ if(toolsSub==='budget') window.BasePayBudget?.renderPractice(body);
+ else if(toolsSub==='personal') window.BasePayBudget?.renderPersonal(body);
+ else if(toolsSub==='split') { body.innerHTML = renderBudgetTool(); previewBudget(); }
  else if(toolsSub==='isa') body.innerHTML = renderISATrackerTool();
  else if(toolsSub==='growth') body.innerHTML = renderGrowthTool();
  else if(toolsSub==='mortgage') body.innerHTML = renderMortgageTool();
@@ -3519,17 +3553,17 @@ function renderBudgetTool(){
  const b = state.budget || {bills:50, fun:20, growth:30};
  return `<div class="card">
   <p class="faint">Give every pound a job. These percentages apply to your net pay from next payday.</p>
-  <div class="field"><label for="bud-bills">Bills %</label><input type="number" id="bud-bills" value="${b.bills}" oninput="previewBudget()"></div>
-  <div class="field"><label for="bud-fun">Fun %</label><input type="number" id="bud-fun" value="${b.fun}" oninput="previewBudget()"></div>
-  <div class="field"><label for="bud-growth">Growth (savings) %</label><input type="number" id="bud-growth" value="${b.growth}" oninput="previewBudget()"></div>
+  <div class="field"><label for="bud-bills">Bills %</label><input type="number" min="0" max="100" step="0.01" id="bud-bills" value="${b.bills}" oninput="previewBudget()"></div>
+  <div class="field"><label for="bud-fun">Fun %</label><input type="number" min="0" max="100" step="0.01" id="bud-fun" value="${b.fun}" oninput="previewBudget()"></div>
+  <div class="field"><label for="bud-growth">Growth (savings) %</label><input type="number" min="0" max="100" step="0.01" id="bud-growth" value="${b.growth}" oninput="previewBudget()"></div>
   <div id="budget-remaining" role="status" class="faint" style="margin-bottom:10px;"></div>
   <button class="btn primary block" onclick="setBudget(document.getElementById('bud-bills').value,document.getElementById('bud-fun').value,document.getElementById('bud-growth').value)">Save budget</button>
  </div>`;
 }
 function previewBudget(){
  const b=Number(document.getElementById('bud-bills').value)||0, f=Number(document.getElementById('bud-fun').value)||0, g=Number(document.getElementById('bud-growth').value)||0;
- const total=b+f+g; const remaining=100-total;
- document.getElementById('budget-remaining').innerHTML = `Total: ${total}% — <span class="${remaining===0?'pos':'neg'}">${remaining===0?'fully allocated':remaining+'% unallocated — give it a job'}</span>`;
+ const total=b+f+g; const remaining=Math.round((100-total)*100)/100;
+ document.getElementById('budget-remaining').innerHTML = `Total: ${total}% — <span class="${remaining===0?'pos':'neg'}">${remaining===0?'fully allocated':remaining>0?remaining+'% left to allocate':Math.abs(remaining)+'% over budget'}</span>`;
 }
 function renderISATrackerTool(){
  const adultUsed = state.isaYearContributed;
@@ -3551,7 +3585,7 @@ function renderGrowthTool(){
   <div class="field"><label for="gc-principal">Starting principal (£)</label><input type="number" id="gc-principal" value="1000"></div>
   <div class="field"><label for="gc-monthly">Monthly contribution (£)</label><input type="number" id="gc-monthly" value="100"></div>
   <div class="field"><label for="gc-rate">Annual growth rate (%)</label><input type="number" id="gc-rate" value="6"></div>
-  <div class="field"><label for="gc-years">Years</label><input type="number" id="gc-years" value="10"></div>
+  <div class="field"><label for="gc-years">Years</label><input type="number" id="gc-years" min="1" max="100" step="1" value="10"></div>
   <button class="btn primary block" onclick="runGrowthCalc()">Calculate</button>
   <div id="gc-result" role="status" style="margin-top:12px;"></div>
   <canvas id="gc-chart" height="90" style="margin-top:10px;"></canvas>
@@ -3561,7 +3595,13 @@ function runGrowthCalc(){
  const principal=Number(document.getElementById('gc-principal').value)||0;
  const monthly=Number(document.getElementById('gc-monthly').value)||0;
  const rate=Number(document.getElementById('gc-rate').value)||0;
- const years=Number(document.getElementById('gc-years').value)||1;
+ const years=Number(document.getElementById('gc-years').value);
+ if(!Number.isInteger(years) || years<1 || years>100){
+  document.getElementById('gc-result').textContent = 'Enter a whole number of years between 1 and 100.';
+  const chart = document.getElementById('gc-chart');
+  chart.getContext('2d').clearRect(0,0,chart.width,chart.height);
+  return;
+ }
  const monthlyRate=rate/100/12;
  let bal=principal; const points=[principal];
  for(let m=1;m<=years*12;m++){ bal = bal*(1+monthlyRate)+monthly; if(m%12===0) points.push(bal); }
@@ -3832,6 +3872,8 @@ async function basepayImportOldSave(){
 }
 function basepayClearForSignOut(){
  window.BasePayTutorial?.exit(false);
+ window.BasePayBudget?.resetSession();
+ document.getElementById('tab-tools').replaceChildren();
  closeModal();
  state = null;
  document.getElementById('tab-invest').replaceChildren();

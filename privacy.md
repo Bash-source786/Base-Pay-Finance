@@ -9,7 +9,9 @@ We use your email address to sign you in, verify your account and help you reset
 Your progress stays in this browser’s storage, called localStorage. It does not sync to other devices or move into an account automatically. You can clear it with Reset guest progress in Home settings. Your colour theme is also stored in this browser.
 
 ## Optional analytics
-If you choose to allow analytics, PostHog helps us see which pages and lessons people use and which account steps succeed or run into errors. If you’re signed in, it can link that activity to your account ID. BasePay does not send PostHog your email, password or financial inputs, or record your screen. You can change your mind using Analytics preferences in BasePay.
+Your real-life budget is stored in the browser where you save it. It does not sync to your BasePay account. You can clear a saved month from the budget tool.
+
+If you choose to allow analytics, PostHog helps us see which pages, lessons and budgeting features people use and which account steps succeed or run into errors. If you’re signed in, it can link that activity to your account ID. BasePay does not send PostHog your email, password or financial inputs, or record your screen. You can change your mind using Analytics preferences in BasePay.
 
 ## All money in the simulator is pretend
 You can practise with simulated money. BasePay does not move real money or connect to your bank. Please keep bank details and other private information out of the simulator.

@@ -76,7 +76,9 @@
    ['Credit tiers', {heading:'Credit tiers reference'}, 'Compare the simulated card, loan and mortgage rates offered at different scores.'],
   ],
   tools: [
-   ['Budget split', '#bud-bills', 'Split your next take-home pay between bills, fun and savings. Save the split once it totals 100%.', {sub:'budget', demo:['Example take-home pay £100', ['50% bills · 20% fun · 30% savings', '£50 bills · £20 fun · £30 savings.'], ['50% bills · 20% fun · 10% savings', '£20 still needs a job.']]}],
+   ['Try a fictional budget', '#practice-budget-title', 'Work through a first-job scenario and see how payday timing and spending decisions affect your balance.', {sub:'budget'}],
+   ['Build your own budget', '#personal-budget-title', 'Plan by month, enter actual amounts as you go and save the budget in this browser.', {sub:'personal'}],
+   ['Budget split', '#bud-bills', 'Split your next take-home pay between bills, fun and savings. Save the split once it totals 100%.', {sub:'split', demo:['Example take-home pay £100', ['50% bills · 20% fun · 30% savings', '£50 bills · £20 fun · £30 savings.'], ['50% bills · 20% fun · 10% savings', '£20 still needs a job.']]}],
    ['ISA Tracker', '#tools-body .progress-bar', 'Compare what you added this tax year with the allowance. The balance rows include current values.', {sub:'isa'}],
    ['Growth Calc', '#gc-principal', 'Set your starting amount, monthly contribution, assumed growth and years. Calculate to plot the result.', {sub:'growth', demo:['Example · £1,000 starting balance · 5% growth · No additions', ['After 1 year', '£1,050'], ['After 2 years', '£1,102.50 · The second year also earns growth on the first year’s gain.']]}],
    ['Mortgage Calc', '#mc-price', 'Change the property price, deposit, rate or term to see the estimated payment and upfront costs.', {sub:'mortgage', mode:'adult'}],

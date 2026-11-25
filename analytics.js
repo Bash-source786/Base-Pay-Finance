@@ -26,7 +26,8 @@
     'signup_viewed', 'auth_request_started', 'auth_request_failed', 'auth_email_resend_accepted',
     'signup_submitted', 'signup_account_ready', 'sign_in_succeeded', 'sign_out_succeeded',
     'landing_start_clicked', 'guest_entered', 'account_entered', 'simulator_started', 'simulator_resumed',
-    'section_viewed', 'lesson_started', 'lesson_step_viewed', 'quiz_answered', 'lesson_completed'
+    'section_viewed', 'lesson_started', 'lesson_step_viewed', 'quiz_answered', 'lesson_completed',
+    'budget_practice_started', 'budget_practice_choice_made', 'budget_practice_completed', 'personal_budget_saved'
   ]);
   const authActions = new Set(['signup', 'signin', 'reset', 'new-password', 'signup_resend', 'reset_resend']);
   const authReasons = new Set([
@@ -110,7 +111,7 @@
   const panel = document.createElement('aside');
   panel.id = 'analytics-choice';
   panel.setAttribute('aria-label','Analytics preferences');
-  panel.innerHTML = '<strong>Help improve BasePay?</strong><p>Allow PostHog to measure visits, account steps and lesson progress. If you sign in, activity can be linked across devices using your account ID. We do not send email, passwords or financial inputs, or record your screen.</p><div class="btn-row"><button type="button" class="btn" id="analytics-decline">No thanks</button><button type="button" class="btn" id="analytics-accept">Allow analytics</button></div>';
+  panel.innerHTML = '<strong>Help improve BasePay?</strong><p>Allow PostHog to measure visits, account steps, lesson progress and which budgeting features people use. If you sign in, activity can be linked across devices using your account ID. We do not send email, passwords or financial inputs, or record your screen.</p><div class="btn-row"><button type="button" class="btn" id="analytics-decline">No thanks</button><button type="button" class="btn" id="analytics-accept">Allow analytics</button></div>';
   panel.hidden = consent !== null;
   document.getElementById('landing-analytics').appendChild(panel);
   document.getElementById('analytics-decline').onclick = () => choose('no');
