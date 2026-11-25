@@ -6,6 +6,7 @@ BasePay is a free, interactive UK financial education simulator. Practise real-l
 
 - Earn and budget: Understand a UK payslip and plan spending.
 - Save and borrow: Explore savings, ISAs, pensions and credit.
+- Budget and money tools: Practise a fictional first-job budget or save a separate personal budget in your browser, with spending categories, recurring costs and a savings goal.
 - Invest and trade: Practise long-term investing and day trading with simulated money.
 - Work through short lessons and scenarios, then try what you learnt in the simulator.
 
